@@ -18,7 +18,7 @@
 
 /* ========== NAVBAR ========== */
 .navbar {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
   color: white;
   padding: 0;
   position: fixed;
@@ -26,11 +26,12 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
   height: var(--navbar-height);
   width: 100%;
   max-width: 100%;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .navbar-container {
@@ -44,6 +45,7 @@
 }
 
 .navbar-logo {
+  font-family: var(--font-heading, 'Playfair Display', serif);
   font-size: 1.8rem;
   font-weight: 700;
   color: white;
@@ -61,53 +63,62 @@
 .nav-menu {
   display: flex;
   list-style: none;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: center;
 }
 
 .nav-link {
-  color: white;
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   font-weight: 500;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 10px;
   transition: var(--transition);
+  font-family: var(--font-body, 'Outfit', sans-serif);
+  font-size: 0.95rem;
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
   transform: translateY(-2px);
 }
 
 .nav-link.login,
 .nav-link.register {
-  border: 2px solid white;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
 }
 
 .nav-link.register {
-  background: white;
-  color: var(--primary);
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  color: #1a1a2e;
+  border: none;
+  font-weight: 700;
+}
+.nav-link.register:hover {
+  box-shadow: 0 4px 20px rgba(246, 211, 101, 0.3);
 }
 
 .user-info {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
 }
 
 .logout-btn {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
   color: white;
-  border: 2px solid white;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
   transition: var(--transition);
+  font-family: var(--font-body, 'Outfit', sans-serif);
 }
 
 .logout-btn:hover {
-  background: white;
-  color: var(--primary);
+  background: rgba(255, 107, 107, 0.8);
+  border-color: transparent;
 }
 
 /* ========== HERO SECTION ========== */
