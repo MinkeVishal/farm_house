@@ -6,6 +6,7 @@ import BudgetCalculator from '../components/BudgetCalculator';
 
 const ROTATING_WORDS = ['Sanctuary', 'Pool Paradise', 'Rustic Cabin', 'Mountain Villa', 'Heritage Palace'];
 
+
 const VIBE_CARDS = [
   {
     emoji: '🧘',
@@ -233,24 +234,7 @@ function Home({ user }) {
             Hand-picked estates with private pools, bonfires, personal chefs & breathtaking views — across {stats.cities}+ destinations in India.
           </p>
 
-          {/* Glass search panel */}
-          <form onSubmit={handleQuickSearch} className="hero-search-panel">
-            <div className="hsp-field">
-              <label>📍 Destination</label>
-              <input type="text" placeholder="Goa, Himachal, Rajasthan..." value={searchLoc} onChange={(e) => setSearchLoc(e.target.value)} />
-            </div>
-            <div className="hsp-field">
-              <label>👥 Guests</label>
-              <input type="number" placeholder="How many?" min="1" value={searchGuests} onChange={(e) => setSearchGuests(e.target.value)} />
-            </div>
-            <div className="hsp-field">
-              <label>💰 Budget / Night</label>
-              <input type="number" placeholder="Max ₹" min="1000" step="500" value={searchPrice} onChange={(e) => setSearchPrice(e.target.value)} />
-            </div>
-            <button type="submit" className="hsp-search-btn">
-              Search Estates
-            </button>
-          </form>
+         
 
           <div className="hero-cta-row">
             <Link to="/farmhouses" className="btn-lux-primary">

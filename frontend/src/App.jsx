@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import NotFound from './pages/NotFound';
+import About from "./pages/About";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -60,6 +61,7 @@ function App() {
         <Route path="/admin" element={user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' ? <AdminDashboard /> : <Navigate to="/" />} />
         <Route path="/owner-dashboard" element={user?.role === 'OWNER' ? <OwnerDashboard user={user} /> : <Navigate to="/" />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/about" element={<About />} />
       </Routes>
       <Footer />
     </Router>

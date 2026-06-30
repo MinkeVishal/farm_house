@@ -17,6 +17,7 @@ function Navbar({ user, onLogout }) {
         </Link>
         <div className="nav-menu">
           <Link to="/" className="nav-link">Home</Link>
+          <Link to="/about">About</Link>
           <Link to="/farmhouses" className="nav-link">Farm Houses</Link>
           
           {user ? (
