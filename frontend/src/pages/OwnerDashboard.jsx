@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { farmhouseAPI, bookingAPI } from '../api/axiosInstance';
 
 function OwnerDashboard({ user }) {
@@ -117,9 +118,14 @@ function OwnerDashboard({ user }) {
 
       <div className="section">
         <h2>Your Farm Houses</h2>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary">
-          {showAddForm ? 'Cancel' : '+ Add New Farm House'}
-        </button>
+        <div className="owner-section-actions">
+          <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary">
+            {showAddForm ? 'Cancel' : '+ Add New Farm House'}
+          </button>
+          <Link to="/create-estate" className="btn btn-secondary">
+            Create Estate Page
+          </Link>
+        </div>
 
         {showAddForm && (
           <form onSubmit={handleAddFarmhouse} className="add-farmhouse-form">

@@ -17,6 +17,7 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import NotFound from './pages/NotFound';
 import About from "./pages/About";
+import CreateEstate from "./pages/CreateEstate";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -56,6 +57,7 @@ function App() {
         <Route path="/farmhouses" element={<FarmHouseList />} />
         <Route path="/farmhouses/:id" element={<FarmHouseDetail user={user} />} />
         <Route path="/booking/:farmhouseId" element={user ? <BookingPage user={user} /> : <Navigate to="/login" />} />
+        <Route path="/create-estate" element={user?.role === 'OWNER' ? <CreateEstate user={user} /> : <Navigate to="/login" />} />
         <Route path="/my-bookings" element={user ? <UserBookings user={user} /> : <Navigate to="/login" />} />
         <Route path="/superadmin" element={user?.role === 'SUPERADMIN' ? <SuperAdminDashboard /> : <Navigate to="/" />} />
         <Route path="/admin" element={user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' ? <AdminDashboard /> : <Navigate to="/" />} />
