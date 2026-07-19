@@ -127,9 +127,14 @@ function FarmHouseList() {
                   <span>👥 {fh.maxGuests} Guests</span>
                 </div>
                 <p className="price">₹{fh.pricePerDay}/night</p>
-                <Link to={`/farmhouses/${fh.id}`} className="btn btn-small">
-                  View Details
-                </Link>
+                <div className="card-actions">
+                  <Link to={`/farmhouses/${fh.id}`} className="btn btn-small btn-outline">
+                    View Details
+                  </Link>
+                  <Link to={`/booking/${fh.id}`} className="btn btn-small btn-primary">
+                    Book Now
+                  </Link>
+                </div>
               </div>
             </div>
           ))

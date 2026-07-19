@@ -345,9 +345,14 @@ function Home({ user }) {
                     <span>🚿 {fh.bathrooms || 3}</span>
                     <span>👥 {fh.maxGuests || 6}</span>
                   </div>
-                  <Link to={`/farmhouses/${fh.id}`} className="estate-view-btn">
-                    View Estate & Book →
-                  </Link>
+                  <div className="estate-card-actions">
+                    <Link to={`/farmhouses/${fh.id}`} className="estate-view-btn estate-outline-btn">
+                      View Details
+                    </Link>
+                    <Link to={`/booking/${fh.id}`} className="estate-view-btn estate-book-btn">
+                      Book Now →
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}

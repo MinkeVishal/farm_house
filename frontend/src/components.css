@@ -477,23 +477,47 @@
 }
 .estate-view-btn {
   display: block;
-  width: 100%;
   text-align: center;
-  padding: 0.85rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 0.75rem 0.5rem;
   border-radius: 12px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   text-decoration: none;
   transition: all 0.3s ease;
-  border: none;
   cursor: pointer;
+  flex: 1;
 }
-.estate-view-btn:hover {
+
+/* Outline — View Details */
+.estate-outline-btn {
+  background: transparent;
+  border: 2px solid #667eea;
+  color: #667eea;
+}
+.estate-outline-btn:hover {
+  background: #667eea;
+  color: white;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
 }
+
+/* Solid — Book Now */
+.estate-book-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: 2px solid transparent;
+}
+.estate-book-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  opacity: 0.92;
+}
+
+/* Dual-button row */
+.estate-card-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
 
 .clear-search-pill {
   background: white;
