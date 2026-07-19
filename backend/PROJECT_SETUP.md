@@ -466,6 +466,12 @@ npm run build
 - Add email notifications
 - Add image upload service (Cloudinary)
 
+frontend project run cmd
+   npm run dev
+
+backend project run cmd
+.\mvnw.cmd spring-boot:run
+
 ---
 
 **Project completed! 🎉**
