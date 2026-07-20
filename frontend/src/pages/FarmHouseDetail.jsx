@@ -113,7 +113,7 @@ function FarmHouseDetail({ user }) {
       ? "/create-estate"
       : user
       ? `/booking/${farmhouse.id}`
-      : "/login";
+      : null; // handled via onClick for non-logged-in users
 
   const bookingLabel =
     user?.role === "OWNER"
@@ -121,6 +121,13 @@ function FarmHouseDetail({ user }) {
       : user
       ? "Book Now →"
       : "Login to Book →";
+
+  const handleBookClick = (e) => {
+    if (!user) {
+      e.preventDefault();
+      navigate("/login", { state: { redirectTo: `/booking/${farmhouse.id}` } });
+    }
+  };
 
   return (
     <div className="fd-page">
@@ -323,13 +330,23 @@ function FarmHouseDetail({ user }) {
 
             <div className="fd-divider" />
 
-            <Link to={bookingLink} className="fd-book-btn">
+            <Link
+              to={bookingLink || "/login"}
+              className="fd-book-btn"
+              onClick={handleBookClick}
+            >
               {bookingLabel}
             </Link>
 
             {!user && (
               <p className="fd-login-hint">
-                <Link to="/login">Log in</Link> or{" "}
+                <Link
+                  to="/login"
+                  state={{ redirectTo: `/booking/${farmhouse.id}` }}
+                >
+                  Log in
+                </Link>{" "}
+                or{" "}
                 <Link to="/register">create an account</Link> to book
               </p>
             )}
@@ -345,7 +362,11 @@ function FarmHouseDetail({ user }) {
           </span>
           <span className="fd-sticky-per"> / night</span>
         </div>
-        <Link to={bookingLink} className="fd-sticky-btn">
+        <Link
+          to={bookingLink || "/login"}
+          className="fd-sticky-btn"
+          onClick={handleBookClick}
+        >
           {bookingLabel}
         </Link>
       </div>

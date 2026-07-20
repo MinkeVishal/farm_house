@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import './animations.css';
 import './components.css';
@@ -18,6 +18,21 @@ import OwnerDashboard from './pages/OwnerDashboard';
 import NotFound from './pages/NotFound';
 import About from "./pages/About";
 import CreateEstate from "./pages/CreateEstate";
+
+// Protected Route Component to handle login redirects elegantly
+function ProtectedRoute({ user, allowedRoles, children }) {
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" state={{ redirectTo: location.pathname }} replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
 
 function App() {
   const [user, setUser] = useState(null);
@@ -56,9 +71,33 @@ function App() {
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
         <Route path="/farmhouses" element={<FarmHouseList />} />
         <Route path="/farmhouses/:id" element={<FarmHouseDetail user={user} />} />
-        <Route path="/booking/:farmhouseId" element={user ? <BookingPage user={user} /> : <Navigate to="/login" />} />
-        <Route path="/create-estate" element={user?.role === 'OWNER' ? <CreateEstate user={user} /> : <Navigate to="/login" />} />
-        <Route path="/my-bookings" element={user ? <UserBookings user={user} /> : <Navigate to="/login" />} />
+        
+        {/* Protected Routes using ProtectedRoute */}
+        <Route 
+          path="/booking/:farmhouseId" 
+          element={
+            <ProtectedRoute user={user}>
+              <BookingPage user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/create-estate" 
+          element={
+            <ProtectedRoute user={user} allowedRoles={['OWNER']}>
+              <CreateEstate user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/my-bookings" 
+          element={
+            <ProtectedRoute user={user}>
+              <UserBookings user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        
         <Route path="/superadmin" element={user?.role === 'SUPERADMIN' ? <SuperAdminDashboard /> : <Navigate to="/" />} />
         <Route path="/admin" element={user?.role === 'ADMIN' || user?.role === 'SUPERADMIN' ? <AdminDashboard /> : <Navigate to="/" />} />
         <Route path="/owner-dashboard" element={user?.role === 'OWNER' ? <OwnerDashboard user={user} /> : <Navigate to="/" />} />

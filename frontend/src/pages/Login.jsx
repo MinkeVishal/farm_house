@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authAPI } from '../api/axiosInstance';
 
 function Login({ onLoginSuccess }) {
@@ -8,6 +8,11 @@ function Login({ onLoginSuccess }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // If the user was redirected here from a farmhouse detail page,
+  // we'll send them back to the booking page after login.
+  const redirectTo = location.state?.redirectTo || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +25,9 @@ function Login({ onLoginSuccess }) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('token', response.data.token);
         onLoginSuccess(response.data.user);
-        navigate('/');
+        // Navigate to the originally intended page (e.g. booking page),
+        // or fall back to home if none was stored.
+        navigate(redirectTo, { replace: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

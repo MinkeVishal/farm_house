@@ -346,11 +346,8 @@ function Home({ user }) {
                     <span>👥 {fh.maxGuests || 6}</span>
                   </div>
                   <div className="estate-card-actions">
-                    <Link to={`/farmhouses/${fh.id}`} className="estate-view-btn estate-outline-btn">
-                      View Details
-                    </Link>
-                    <Link to={`/booking/${fh.id}`} className="estate-view-btn estate-book-btn">
-                      Book Now →
+                    <Link to={`/farmhouses/${fh.id}`} className="estate-view-btn estate-book-btn">
+                      View Details →
                     </Link>
                   </div>
                 </div>
