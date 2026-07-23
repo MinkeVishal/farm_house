@@ -25,7 +25,7 @@ function SuperAdminDashboard() {
       const usersResponse = await userAPI.getAllUsers();
       const bookingsResponse = await bookingAPI.getAllBookings();
       const paymentsResponse = await paymentAPI.getAllPayments();
-      const farmhousesResponse = await farmhouseAPI.getAllFarmHouses(0, 100);
+      const farmhousesResponse = await farmhouseAPI.getAllFarmHousesAdmin(0, 100);
 
       setStats({
         totalUsers: usersResponse.data.users?.length || 0,

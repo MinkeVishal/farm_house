@@ -42,6 +42,8 @@ export const farmhouseAPI = {
     }),
   getAllFarmHouses: (page = 0, size = 10) =>
     axios.get(`${API_BASE_URL}/farmhouses?page=${page}&size=${size}`),
+  getAllFarmHousesAdmin: (page = 0, size = 10) =>
+    axios.get(`${API_BASE_URL}/farmhouses/all?page=${page}&size=${size}`),
   getFarmHouseById: (id) => axios.get(`${API_BASE_URL}/farmhouses/${id}`),
   getFarmHousesByOwner: (ownerId) =>
     axios.get(`${API_BASE_URL}/farmhouses/owner/${ownerId}`),

@@ -46,7 +46,7 @@ function AdminDashboard() {
       setBookings(bookingsResponse.data.bookings);
 
       // Fetch farmhouses pending approval
-      const allFarmhousesResponse = await farmhouseAPI.getAllFarmHouses(0, 100);
+      const allFarmhousesResponse = await farmhouseAPI.getAllFarmHousesAdmin(0, 100);
       setFarmhouses(allFarmhousesResponse.data.farmhouses);
     } catch (err) {
       console.error('Error fetching admin data:', err);
