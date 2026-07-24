@@ -7,6 +7,18 @@ function OwnerDashboard({ user }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingFarmHouse, setEditingFarmHouse] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    location: '',
+    description: '',
+    pricePerDay: '',
+    maxGuests: '',
+    bedrooms: '',
+    bathrooms: '',
+    amenities: '["WiFi", "Pool", "Garden"]',
+    imageUrl: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -72,6 +84,7 @@ function OwnerDashboard({ user }) {
 
       if (response.data.success) {
         alert('Farm house added successfully!');
+        setFarmhouses((prev) => [response.data.farmhouse, ...prev]);
         setFormData({
           name: '',
           location: '',
@@ -90,6 +103,70 @@ function OwnerDashboard({ user }) {
       alert('Failed to add farm house');
     }
   };
+
+  const handleEditClick = (farmhouse) => {
+    setEditingFarmHouse(farmhouse);
+    setEditFormData({
+      name: farmhouse.name || '',
+      location: farmhouse.location || '',
+      description: farmhouse.description || '',
+      pricePerDay: farmhouse.pricePerDay || '',
+      maxGuests: farmhouse.maxGuests || '',
+      bedrooms: farmhouse.bedrooms || '',
+      bathrooms: farmhouse.bathrooms || '',
+      amenities: farmhouse.amenities || '["WiFi", "Pool", "Garden"]',
+      imageUrl: farmhouse.imageUrl || '',
+    });
+  };
+
+  const handleEditFormChange = (e) => {
+    setEditFormData({
+      ...editFormData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleUpdateFarmhouse = async (e) => {
+    e.preventDefault();
+    if (!editingFarmHouse) return;
+
+    try {
+      const response = await farmhouseAPI.updateFarmHouse(
+        editingFarmHouse.id,
+        {
+          ...editFormData,
+          pricePerDay: parseFloat(editFormData.pricePerDay),
+          maxGuests: parseInt(editFormData.maxGuests, 10),
+          bedrooms: parseInt(editFormData.bedrooms, 10),
+          bathrooms: parseInt(editFormData.bathrooms, 10),
+        },
+        user.id
+      );
+
+      if (response.data.success) {
+        alert('Farm house updated successfully!');
+        setEditingFarmHouse(null);
+        fetchOwnerData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update farm house');
+    }
+  };
+
+  const handleDeleteFarmhouse = async (farmhouseId) => {
+    if (!window.confirm('Are you sure you want to delete this farm house?')) return;
+
+    try {
+      await farmhouseAPI.deleteFarmHouse(farmhouseId, user.id);
+      alert('Farm house deleted successfully!');
+      fetchOwnerData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete farm house');
+    }
+  };
+
+  const pendingFarmhouses = farmhouses.filter((fh) => !fh.isApproved);
+  const approvedFarmhouses = farmhouses.filter((fh) => fh.isApproved);
 
   if (loading) {
     return <div className="loading">Loading...</div>;
@@ -212,6 +289,7 @@ function OwnerDashboard({ user }) {
         )}
 
         <div className="farmhouses-table">
+          <h3>Pending Farm Houses</h3>
           <table>
             <thead>
               <tr>
@@ -223,25 +301,170 @@ function OwnerDashboard({ user }) {
               </tr>
             </thead>
             <tbody>
-              {farmhouses.map((fh) => (
-                <tr key={fh.id}>
-                  <td>{fh.name}</td>
-                  <td>{fh.location}</td>
-                  <td>₹{fh.pricePerDay}</td>
-                  <td>
-                    <span className={`badge ${fh.isApproved ? 'approved' : 'pending'}`}>
-                      {fh.isApproved ? 'Approved' : 'Pending'}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="edit-btn">Edit</button>
-                  </td>
+              {pendingFarmhouses.length > 0 ? (
+                pendingFarmhouses.map((fh) => (
+                  <tr key={fh.id}>
+                    <td>{fh.name}</td>
+                    <td>{fh.location}</td>
+                    <td>₹{fh.pricePerDay}</td>
+                    <td>
+                      <span className="badge pending">Pending</span>
+                    </td>
+                    <td>
+                      <button className="edit-btn" onClick={() => handleEditClick(fh)}>
+                        Edit
+                      </button>
+                      <button className="delete-btn" onClick={() => handleDeleteFarmhouse(fh.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5">No pending farmhouses available.</td>
                 </tr>
-              ))}
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="farmhouses-table" style={{ marginTop: '30px' }}>
+          <h3>Approved Farm Houses</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Price/Night</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {approvedFarmhouses.length > 0 ? (
+                approvedFarmhouses.map((fh) => (
+                  <tr key={fh.id}>
+                    <td>{fh.name}</td>
+                    <td>{fh.location}</td>
+                    <td>₹{fh.pricePerDay}</td>
+                    <td>
+                      <span className="badge approved">Approved</span>
+                    </td>
+                    <td>
+                      <button className="edit-btn" onClick={() => handleEditClick(fh)}>
+                        Edit
+                      </button>
+                      <button className="delete-btn" onClick={() => handleDeleteFarmhouse(fh.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5">No approved farmhouses available.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {editingFarmHouse && (
+        <div className="section">
+          <h2>Edit Farm House</h2>
+          <form onSubmit={handleUpdateFarmhouse} className="add-farmhouse-form">
+            <div className="form-group">
+              <label>Name:</label>
+              <input
+                type="text"
+                name="name"
+                value={editFormData.name}
+                onChange={handleEditFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Location:</label>
+              <input
+                type="text"
+                name="location"
+                value={editFormData.location}
+                onChange={handleEditFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Description:</label>
+              <textarea
+                name="description"
+                value={editFormData.description}
+                onChange={handleEditFormChange}
+                rows="3"
+              />
+            </div>
+            <div className="form-group">
+              <label>Price per Day:</label>
+              <input
+                type="number"
+                name="pricePerDay"
+                value={editFormData.pricePerDay}
+                onChange={handleEditFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Max Guests:</label>
+              <input
+                type="number"
+                name="maxGuests"
+                value={editFormData.maxGuests}
+                onChange={handleEditFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Bedrooms:</label>
+              <input
+                type="number"
+                name="bedrooms"
+                value={editFormData.bedrooms}
+                onChange={handleEditFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Bathrooms:</label>
+              <input
+                type="number"
+                name="bathrooms"
+                value={editFormData.bathrooms}
+                onChange={handleEditFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Image URL:</label>
+              <input
+                type="url"
+                name="imageUrl"
+                value={editFormData.imageUrl}
+                onChange={handleEditFormChange}
+              />
+            </div>
+            <button type="submit" className="submit-btn">Update Farm House</button>
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => setEditingFarmHouse(null)}
+              style={{ marginLeft: '10px' }}
+            >
+              Cancel
+            </button>
+          </form>
+        </div>
+      )}
 
       <div className="section">
         <h2>Recent Bookings</h2>

@@ -57,11 +57,12 @@ function SuperAdminDashboard() {
   const handleDeleteFarmhouse = async (farmhouseId) => {
     if (window.confirm('Are you sure you want to delete this farm house?')) {
       try {
-        await farmhouseAPI.deleteFarmHouse(farmhouseId);
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        await farmhouseAPI.deleteFarmHouse(farmhouseId, currentUser.id || 1);
         alert('Farm house deleted!');
         fetchSuperAdminData();
       } catch (err) {
-        alert('Failed to delete farm house');
+        alert(err.response?.data?.message || 'Failed to delete farm house');
       }
     }
   };

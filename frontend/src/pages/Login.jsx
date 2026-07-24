@@ -23,6 +23,7 @@ function Login({ onLoginSuccess }) {
       const response = await authAPI.login(email, password);
       if (response.data.success) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('userId', response.data.user.id);
         localStorage.setItem('token', response.data.token);
         onLoginSuccess(response.data.user);
         // Navigate to the originally intended page (e.g. booking page),

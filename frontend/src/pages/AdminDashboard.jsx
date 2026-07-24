@@ -81,8 +81,11 @@ function AdminDashboard() {
         amenities: formData.amenities.split(',').map((a) => a.trim()),
       };
 
-      // Using admin ID as owner ID (default to 1 for now)
-      const adminId = localStorage.getItem('userId') || 1;
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const adminId = currentUser.id;
+      if (!adminId) {
+        throw new Error('Admin ID not found. Please login again.');
+      }
       await farmhouseAPI.addFarmHouse(farmhouseData, adminId);
 
       setSubmitSuccess('Farm house added successfully!');
@@ -122,11 +125,12 @@ function AdminDashboard() {
   const handleDeleteFarmhouse = async (farmhouseId) => {
     if (window.confirm('Are you sure you want to delete this farm house?')) {
       try {
-        await farmhouseAPI.deleteFarmHouse(farmhouseId);
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        await farmhouseAPI.deleteFarmHouse(farmhouseId, currentUser.id || 1);
         alert('Farm house deleted!');
         fetchAdminData();
       } catch (err) {
-        alert('Failed to delete farm house');
+        alert(err.response?.data?.message || 'Failed to delete farm house');
       }
     }
   };
@@ -419,6 +423,7 @@ function AdminDashboard() {
                 <th>Owner</th>
                 <th>Price/Night</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -432,6 +437,14 @@ function AdminDashboard() {
                     <span className={`badge ${fh.isApproved ? 'approved' : 'pending'}`}>
                       {fh.isApproved ? 'Approved' : 'Pending'}
                     </span>
+                  </td>
+                  <td>
+                    <button 
+                      onClick={() => handleDeleteFarmhouse(fh.id)}
+                      className="delete-btn"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}

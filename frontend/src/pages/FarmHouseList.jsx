@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { farmhouseAPI } from '../api/axiosInstance';
 
-function FarmHouseList() {
+function FarmHouseList({ user }) {
   const [farmhouses, setFarmhouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -79,31 +79,39 @@ function FarmHouseList() {
       <h1>Farm Houses</h1>
 
       <div className="search-section">
-        <form onSubmit={handleSearchByLocation} className="search-form">
-          <input
-            type="text"
-            placeholder="Search by location..."
-            value={searchLocation}
-            onChange={(e) => setSearchLocation(e.target.value)}
-          />
-          <button type="submit" className="search-btn">Search Location</button>
-        </form>
+        <div className="search-actions-row">
+          <form onSubmit={handleSearchByLocation} className="search-form">
+            <input
+              type="text"
+              placeholder="Search by location..."
+              value={searchLocation}
+              onChange={(e) => setSearchLocation(e.target.value)}
+            />
+            <button type="submit" className="search-btn">Search Location</button>
+          </form>
 
-        <form onSubmit={handleSearchByPrice} className="price-filter">
-          <input
-            type="number"
-            placeholder="Min Price"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="Max Price"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-          />
-          <button type="submit" className="search-btn">Filter by Price</button>
-        </form>
+          <form onSubmit={handleSearchByPrice} className="price-filter">
+            <input
+              type="number"
+              placeholder="Min Price"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Max Price"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+            />
+            <button type="submit" className="search-btn">Filter by Price</button>
+          </form>
+
+          {user?.role === 'OWNER' && (
+            <Link to="/create-estate" className="btn btn-primary add-farmhouse-btn">
+              + Add New Farm House
+            </Link>
+          )}
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}

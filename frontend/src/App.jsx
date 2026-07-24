@@ -55,6 +55,7 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
     localStorage.removeItem('token');
   };
 
@@ -69,7 +70,7 @@ function App() {
         <Route path="/" element={<Home user={user} />} />
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLoginSuccess={setUser} />} />
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
-        <Route path="/farmhouses" element={<FarmHouseList />} />
+        <Route path="/farmhouses" element={<FarmHouseList user={user} />} />
         <Route path="/farmhouses/:id" element={<FarmHouseDetail user={user} />} />
         
         {/* Protected Routes using ProtectedRoute */}

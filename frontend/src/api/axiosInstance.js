@@ -55,11 +55,16 @@ export const farmhouseAPI = {
     axios.get(
       `${API_BASE_URL}/farmhouses/search/price?minPrice=${minPrice}&maxPrice=${maxPrice}&page=${page}&size=${size}`
     ),
-  updateFarmHouse: (id, data) =>
-    axios.put(`${API_BASE_URL}/farmhouses/${id}`, data),
+  updateFarmHouse: (id, data, requesterId) =>
+    axios.put(`${API_BASE_URL}/farmhouses/${id}`, data, {
+      headers: { 'owner-id': requesterId },
+    }),
   approveFarmHouse: (id) =>
     axios.put(`${API_BASE_URL}/farmhouses/${id}/approve`),
-  deleteFarmHouse: (id) => axios.delete(`${API_BASE_URL}/farmhouses/${id}`),
+  deleteFarmHouse: (id, requesterId) =>
+    axios.delete(`${API_BASE_URL}/farmhouses/${id}`, {
+      headers: { 'owner-id': requesterId },
+    }),
 };
 
 // Booking API
