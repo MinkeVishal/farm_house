@@ -32,12 +32,8 @@ public class SecurityConfig {
             
             // Authorization rules
             .authorizeHttpRequests(authz -> authz
-                // Allow public access to auth endpoints
-                .requestMatchers("/api/auth/**").permitAll()
-                
-                // Allow public access to farmhouses (read-only)
-                .requestMatchers("/api/farmhouses//**").permitAll()
-                .requestMatchers("/api/farmhouses").permitAll()
+                // Allow public access to all API endpoints for development
+                .requestMatchers("/api/**").permitAll()
                 
                 // Allow H2 console access (for development only)
                 .requestMatchers("/h2-console/**").permitAll()

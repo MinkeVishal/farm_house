@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.example.demo.service.EmailService;
+
 @Service
 public class BookingService {
     
@@ -26,6 +28,9 @@ public class BookingService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private EmailService emailService;
     
     /**
      * Create a new booking
@@ -86,6 +91,11 @@ public class BookingService {
         booking.setStatus(Booking.BookingStatus.PENDING);
         
         Booking savedBooking = bookingRepository.save(booking);
+        try {
+            emailService.sendBookingConfirmationEmail(userOptional.get(), savedBooking);
+        } catch (Exception e) {
+            System.err.println("Failed to send booking confirmation email: " + e.getMessage());
+        }
         return convertToDTO(savedBooking);
     }
     

@@ -71,6 +71,32 @@ public class FarmHouseController {
     }
     
     /**
+     * Get all farm houses (both approved and unapproved) - paginated
+     * GET /api/farmhouses/all?page=0&size=10
+     */
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllFarmHousesAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<FarmHouseDTO> farmHouses = farmHouseService.getAllFarmHouses(pageable);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("farmhouses", farmHouses.getContent());
+            response.put("totalPages", farmHouses.getTotalPages());
+            response.put("totalElements", farmHouses.getTotalElements());
+            response.put("currentPage", page);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
      * Get farm house by ID
      * GET /api/farmhouses/:id
      */
@@ -169,9 +195,11 @@ public class FarmHouseController {
      * PUT /api/farmhouses/:id
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateFarmHouse(@PathVariable Long id, @RequestBody FarmHouseDTO farmHouseDTO) {
+    public ResponseEntity<?> updateFarmHouse(@PathVariable Long id,
+                                             @RequestBody FarmHouseDTO farmHouseDTO,
+                                             @RequestHeader("owner-id") Long requesterId) {
         try {
-            FarmHouseDTO updatedFarmHouse = farmHouseService.updateFarmHouse(id, farmHouseDTO);
+            FarmHouseDTO updatedFarmHouse = farmHouseService.updateFarmHouse(id, farmHouseDTO, requesterId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Farm house updated successfully");
@@ -211,9 +239,10 @@ public class FarmHouseController {
      * DELETE /api/farmhouses/:id
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteFarmHouse(@PathVariable Long id) {
+    public ResponseEntity<?> deleteFarmHouse(@PathVariable Long id,
+                                             @RequestHeader("owner-id") Long requesterId) {
         try {
-            farmHouseService.deleteFarmHouse(id);
+            farmHouseService.deleteFarmHouse(id, requesterId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Farm house deleted successfully");

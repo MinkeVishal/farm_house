@@ -32,7 +32,7 @@ public class FarmHouseService {
         }
         
         User owner = ownerOptional.get();
-        if (owner.getRole() != User.Role.OWNER && owner.getRole() != User.Role.ADMIN) {
+        if (owner.getRole() != User.Role.OWNER && owner.getRole() != User.Role.ADMIN && owner.getRole() != User.Role.SUPERADMIN) {
             throw new RuntimeException("Only owners can add farm houses");
         }
         
@@ -48,7 +48,7 @@ public class FarmHouseService {
         farmHouse.setAmenities(dto.getAmenities());
         farmHouse.setImageUrl(dto.getImageUrl());
         farmHouse.setAvailable(true);
-        farmHouse.setIsApproved(false);
+        farmHouse.setIsApproved(true);
         
         FarmHouse savedFarmHouse = farmHouseRepository.save(farmHouse);
         return convertToDTO(savedFarmHouse);
@@ -70,6 +70,14 @@ public class FarmHouseService {
      */
     public Page<FarmHouseDTO> getAllApprovedFarmHouses(Pageable pageable) {
         Page<FarmHouse> farmHouses = farmHouseRepository.findByIsApprovedTrue(pageable);
+        return farmHouses.map(this::convertToDTO);
+    }
+    
+    /**
+     * Get all farm houses (both approved and unapproved) - paginated
+     */
+    public Page<FarmHouseDTO> getAllFarmHouses(Pageable pageable) {
+        Page<FarmHouse> farmHouses = farmHouseRepository.findAll(pageable);
         return farmHouses.map(this::convertToDTO);
     }
     
@@ -105,13 +113,28 @@ public class FarmHouseService {
     /**
      * Update farm house
      */
-    public FarmHouseDTO updateFarmHouse(Long id, FarmHouseDTO dto) {
+    public FarmHouseDTO updateFarmHouse(Long id, FarmHouseDTO dto, Long requesterId) {
         Optional<FarmHouse> farmHouseOptional = farmHouseRepository.findById(id);
         if (farmHouseOptional.isEmpty()) {
             throw new RuntimeException("Farm house not found");
         }
-        
+
+        Optional<User> requesterOptional = userRepository.findById(requesterId);
+        if (requesterOptional.isEmpty()) {
+            throw new RuntimeException("Requester not found");
+        }
+
+        User requester = requesterOptional.get();
         FarmHouse farmHouse = farmHouseOptional.get();
+
+        if (requester.getRole() == User.Role.OWNER) {
+            if (!farmHouse.getOwner().getId().equals(requesterId)) {
+                throw new RuntimeException("Only the farmhouse owner or admin can update this farmhouse");
+            }
+        } else if (requester.getRole() != User.Role.ADMIN && requester.getRole() != User.Role.SUPERADMIN) {
+            throw new RuntimeException("Only owners or admins can update farm houses");
+        }
+
         if (dto.getName() != null) farmHouse.setName(dto.getName());
         if (dto.getLocation() != null) farmHouse.setLocation(dto.getLocation());
         if (dto.getDescription() != null) farmHouse.setDescription(dto.getDescription());
@@ -121,9 +144,37 @@ public class FarmHouseService {
         if (dto.getBathrooms() != null) farmHouse.setBathrooms(dto.getBathrooms());
         if (dto.getAmenities() != null) farmHouse.setAmenities(dto.getAmenities());
         if (dto.getImageUrl() != null) farmHouse.setImageUrl(dto.getImageUrl());
-        
+
         FarmHouse updatedFarmHouse = farmHouseRepository.save(farmHouse);
         return convertToDTO(updatedFarmHouse);
+    }
+    
+    /**
+     * Delete farm house
+     */
+    public void deleteFarmHouse(Long id, Long requesterId) {
+        Optional<FarmHouse> farmHouseOptional = farmHouseRepository.findById(id);
+        if (farmHouseOptional.isEmpty()) {
+            throw new RuntimeException("Farm house not found");
+        }
+
+        Optional<User> requesterOptional = userRepository.findById(requesterId);
+        if (requesterOptional.isEmpty()) {
+            throw new RuntimeException("Requester not found");
+        }
+
+        User requester = requesterOptional.get();
+        FarmHouse farmHouse = farmHouseOptional.get();
+
+        if (requester.getRole() == User.Role.OWNER) {
+            if (!farmHouse.getOwner().getId().equals(requesterId)) {
+                throw new RuntimeException("Only the farmhouse owner or admin can delete this farmhouse");
+            }
+        } else if (requester.getRole() != User.Role.ADMIN && requester.getRole() != User.Role.SUPERADMIN) {
+            throw new RuntimeException("Only owners or admins can delete farm houses");
+        }
+
+        farmHouseRepository.deleteById(id);
     }
     
     /**
@@ -139,13 +190,6 @@ public class FarmHouseService {
         farmHouse.setIsApproved(true);
         FarmHouse updatedFarmHouse = farmHouseRepository.save(farmHouse);
         return convertToDTO(updatedFarmHouse);
-    }
-    
-    /**
-     * Delete farm house
-     */
-    public void deleteFarmHouse(Long id) {
-        farmHouseRepository.deleteById(id);
     }
     
     /**
