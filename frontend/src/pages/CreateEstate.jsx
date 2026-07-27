@@ -51,7 +51,7 @@ function CreateEstate({ user }) {
       );
 
       if (response.data?.success) {
-        setMessage('Estate created successfully.');
+        setMessage('Estate created successfully. It is pending admin approval and will appear after approval.');
         setFormData({
           name: '',
           location: '',

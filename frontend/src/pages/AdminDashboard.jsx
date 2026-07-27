@@ -1,493 +1,849 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { userAPI, farmhouseAPI, bookingAPI, paymentAPI } from '../api/axiosInstance';
+import './AdminDashboard.css';
 
+// ─── Icon Components ──────────────────────────────────────────────────────────
+const Icon = ({ d, size = 20, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+);
+
+const icons = {
+  dashboard: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm9 2l2 2 4-4',
+  farmhouse: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10',
+  bookings: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+  payments: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+  approve: 'M20 6L9 17l-5-5',
+  delete: 'M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6',
+  add: 'M12 5v14M5 12h14',
+  search: 'M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0',
+  logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  bell: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
+  menu: 'M3 12h18M3 6h18M3 18h18',
+  close: 'M18 6L6 18M6 6l12 12',
+  eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
+  block: 'M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636',
+  refresh: 'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+  trending: 'M23 6l-9.5 9.5-5-5L1 18',
+  calendar: 'M8 2v4M16 2v4M3 10h18M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  filter: 'M22 3H2l8 9.46V19l4 2v-8.54z',
+  star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+  check: 'M20 6L9 17l-5-5',
+  info: 'M12 8h.01M12 11v5M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',
+};
+
+// ─── Stat Card Component ───────────────────────────────────────────────────────
+function StatCard({ title, value, subtitle, iconPath, gradient, trend }) {
+  const [count, setCount] = useState(0);
+  const num = parseInt(value) || 0;
+
+  useEffect(() => {
+    let start = 0;
+    const step = Math.ceil(num / 40);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= num) { setCount(num); clearInterval(timer); }
+      else setCount(start);
+    }, 30);
+    return () => clearInterval(timer);
+  }, [num]);
+
+  return (
+    <div className="adm-stat-card" style={{ background: gradient }}>
+      <div className="adm-stat-top">
+        <div>
+          <p className="adm-stat-title">{title}</p>
+          <h2 className="adm-stat-value">{count.toLocaleString()}</h2>
+          {subtitle && <p className="adm-stat-subtitle">{subtitle}</p>}
+        </div>
+        <div className="adm-stat-icon-wrap">
+          <Icon d={iconPath} size={26} color="#fff" />
+        </div>
+      </div>
+      {trend !== undefined && (
+        <div className="adm-stat-trend">
+          <Icon d={icons.trending} size={14} color={trend >= 0 ? '#4ade80' : '#f87171'} />
+          <span style={{ color: trend >= 0 ? '#4ade80' : '#f87171' }}>
+            {trend >= 0 ? '+' : ''}{trend}% this month
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Mini Bar Chart ────────────────────────────────────────────────────────────
+function MiniBarChart({ data, color }) {
+  const max = Math.max(...data, 1);
+  return (
+    <div className="adm-bar-chart">
+      {data.map((v, i) => (
+        <div key={i} className="adm-bar-wrap">
+          <div
+            className="adm-bar"
+            style={{ height: `${(v / max) * 100}%`, background: color }}
+            title={v}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Modal Component ───────────────────────────────────────────────────────────
+function Modal({ open, onClose, title, children }) {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    if (open) document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div className="adm-modal-overlay" onClick={onClose}>
+      <div className="adm-modal" onClick={e => e.stopPropagation()}>
+        <div className="adm-modal-header">
+          <h3>{title}</h3>
+          <button className="adm-modal-close" onClick={onClose}>
+            <Icon d={icons.close} size={18} />
+          </button>
+        </div>
+        <div className="adm-modal-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Toast Notification ────────────────────────────────────────────────────────
+function Toast({ toasts, removeToast }) {
+  return (
+    <div className="adm-toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`adm-toast adm-toast-${t.type}`}>
+          <Icon d={t.type === 'success' ? icons.check : t.type === 'error' ? icons.close : icons.info} size={16} />
+          <span>{t.message}</span>
+          <button onClick={() => removeToast(t.id)}>✕</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main AdminDashboard Component ────────────────────────────────────────────
 function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalBookings: 0,
-    totalPayments: 0,
-  });
+  const [stats, setStats] = useState({ totalUsers: 0, totalBookings: 0, totalPayments: 0, pendingApprovals: 0 });
   const [farmhouses, setFarmhouses] = useState([]);
   const [users, setUsers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    location: '',
-    description: '',
-    pricePerDay: '',
-    maxGuests: '',
-    amenities: '',
-    imageUrl: '',
-  });
-  const [submitError, setSubmitError] = useState('');
-  const [submitSuccess, setSubmitSuccess] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [toasts, setToasts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [formData, setFormData] = useState({ name: '', location: '', description: '', pricePerDay: '', maxGuests: '', amenities: '', imageUrl: '' });
+  const [formLoading, setFormLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
+  const toastRef = useRef(0);
 
-  useEffect(() => {
-    fetchAdminData();
-  }, []);
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const fetchAdminData = async () => {
+  // ── Toast helpers ──
+  const addToast = (message, type = 'success') => {
+    const id = ++toastRef.current;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => removeToast(id), 4000);
+  };
+  const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
+
+  // ── Fetch data ──
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      // Fetch statistics
-      const usersResponse = await userAPI.getAllUsers();
-      const bookingsResponse = await bookingAPI.getAllBookings();
-      const paymentsResponse = await paymentAPI.getAllPayments();
-      
+      const [usersRes, bookingsRes, paymentsRes, farmRes] = await Promise.allSettled([
+        userAPI.getAllUsers(),
+        bookingAPI.getAllBookings(),
+        paymentAPI.getAllPayments(),
+        farmhouseAPI.getAllFarmHousesAdmin(0, 100),
+      ]);
+
+      const usersList = usersRes.value?.data?.users || [];
+      const bookingsList = bookingsRes.value?.data?.bookings || [];
+      const paymentsList = paymentsRes.value?.data?.payments || [];
+      const farmList = farmRes.value?.data?.farmhouses || [];
+
+      setUsers(usersList);
+      setBookings(bookingsList);
+      setFarmhouses(farmList);
       setStats({
-        totalUsers: usersResponse.data.users.length,
-        totalBookings: bookingsResponse.data.bookings.length,
-        totalPayments: paymentsResponse.data.payments.length,
+        totalUsers: usersList.length,
+        totalBookings: bookingsList.length,
+        totalPayments: paymentsList.length,
+        pendingApprovals: farmList.filter(f => !f.isApproved).length,
       });
-
-      setUsers(usersResponse.data.users);
-      setBookings(bookingsResponse.data.bookings);
-
-      // Fetch farmhouses pending approval
-      const allFarmhousesResponse = await farmhouseAPI.getAllFarmHousesAdmin(0, 100);
-      setFarmhouses(allFarmhousesResponse.data.farmhouses);
     } catch (err) {
-      console.error('Error fetching admin data:', err);
+      addToast('Failed to load data', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  useEffect(() => { fetchData(); }, []);
 
+  // ── Add Farmhouse ──
   const handleAddFarmhouse = async (e) => {
     e.preventDefault();
-    setSubmitError('');
-    setSubmitSuccess('');
-
     if (!formData.name || !formData.location || !formData.pricePerDay) {
-      setSubmitError('Please fill in all required fields');
-      return;
+      addToast('Please fill all required fields', 'error'); return;
     }
-
+    setFormLoading(true);
     try {
-      const farmhouseData = {
+      const data = {
         ...formData,
         pricePerDay: parseFloat(formData.pricePerDay),
         maxGuests: parseInt(formData.maxGuests) || 1,
-        amenities: formData.amenities.split(',').map((a) => a.trim()),
+        amenities: formData.amenities.split(',').map(a => a.trim()).filter(Boolean),
       };
-
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       const adminId = currentUser.id;
-      if (!adminId) {
-        throw new Error('Admin ID not found. Please login again.');
-      }
-      await farmhouseAPI.addFarmHouse(farmhouseData, adminId);
-
-      setSubmitSuccess('Farm house added successfully!');
-      setFormData({
-        name: '',
-        location: '',
-        description: '',
-        pricePerDay: '',
-        maxGuests: '',
-        amenities: '',
-        imageUrl: '',
-      });
-      setShowAddForm(false);
-
-      // Refresh data
-      setTimeout(() => {
-        fetchAdminData();
-        setSubmitSuccess('');
-      }, 2000);
+      if (!adminId) throw new Error('Admin ID missing');
+      await farmhouseAPI.addFarmHouse(data, adminId);
+      addToast('Farm house added successfully!');
+      setShowAddModal(false);
+      setFormData({ name: '', location: '', description: '', pricePerDay: '', maxGuests: '', amenities: '', imageUrl: '' });
+      fetchData();
     } catch (err) {
-      setSubmitError(err.response?.data?.message || 'Failed to add farm house');
+      addToast(err.response?.data?.message || 'Failed to add farm house', 'error');
+    } finally {
+      setFormLoading(false);
     }
   };
 
-  const handleApproveFarmhouse = async (farmhouseId) => {
+  // ── Approve Farmhouse ──
+  const handleApprove = async (id) => {
     try {
-      const response = await farmhouseAPI.approveFarmHouse(farmhouseId);
-      if (response.data.success) {
-        alert('Farm house approved!');
-        fetchAdminData();
-      }
-    } catch (err) {
-      alert('Failed to approve farm house');
+      await farmhouseAPI.approveFarmHouse(id);
+      addToast('Farm house approved!');
+      fetchData();
+    } catch {
+      addToast('Failed to approve farm house', 'error');
     }
   };
 
-  const handleDeleteFarmhouse = async (farmhouseId) => {
-    if (window.confirm('Are you sure you want to delete this farm house?')) {
-      try {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        await farmhouseAPI.deleteFarmHouse(farmhouseId, currentUser.id || 1);
-        alert('Farm house deleted!');
-        fetchAdminData();
-      } catch (err) {
-        alert(err.response?.data?.message || 'Failed to delete farm house');
-      }
-    }
+  // ── Delete Farmhouse ──
+  const handleDelete = (id) => {
+    setConfirmDialog({
+      open: true,
+      message: 'Are you sure you want to delete this farm house? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await farmhouseAPI.deleteFarmHouse(id, currentUser.id || 1);
+          addToast('Farm house deleted');
+          fetchData();
+        } catch (err) {
+          addToast(err.response?.data?.message || 'Failed to delete', 'error');
+        }
+        setConfirmDialog({ open: false, message: '', onConfirm: null });
+      },
+    });
   };
+
+  const unapprovedFarmhouses = farmhouses.filter(f => !f.isApproved);
+
+  // ── Filtered data ──
+  const filteredUsers = users.filter(u =>
+    (u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     u.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (filterStatus === 'all' || (filterStatus === 'active' && !u.isBlocked) || (filterStatus === 'blocked' && u.isBlocked))
+  );
+
+  const filteredFarmhouses = farmhouses.filter(f =>
+    (f.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     f.location?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (filterStatus === 'all' || (filterStatus === 'approved' && f.isApproved) || (filterStatus === 'pending' && !f.isApproved))
+  );
+
+  const filteredBookings = bookings.filter(b =>
+    (b.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     b.farmHouseName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (filterStatus === 'all' || b.status?.toLowerCase() === filterStatus)
+  );
+
+  // ── Sidebar nav items ──
+  const navItems = [
+    { key: 'overview', label: 'Overview', icon: icons.dashboard },
+    { key: 'users', label: 'Users', icon: icons.users, count: stats.totalUsers },
+    { key: 'farmhouses', label: 'Farm Houses', icon: icons.farmhouse, count: farmhouses.length },
+    { key: 'bookings', label: 'Bookings', icon: icons.bookings, count: stats.totalBookings },
+    { key: 'approvals', label: 'Pending', icon: icons.approve, count: stats.pendingApprovals, badge: true },
+  ];
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="adm-splash">
+        <div className="adm-spinner" />
+        <p>Loading Admin Dashboard...</p>
+      </div>
+    );
   }
 
-  const unapprovedFarmhouses = farmhouses.filter((fh) => !fh.isApproved);
-
   return (
-    <div className="admin-dashboard-container">
-      <h1>Admin Dashboard</h1>
+    <div className="adm-root">
+      <Toast toasts={toasts} removeToast={removeToast} />
 
-      {activeTab === 'overview' && (
-        <>
-          <div className="dashboard-stats">
-            <div className="stat-card">
-              <h3>Total Users</h3>
-              <p className="stat-number">{stats.totalUsers}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Total Bookings</h3>
-              <p className="stat-number">{stats.totalBookings}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Total Payments</h3>
-              <p className="stat-number">{stats.totalPayments}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Pending Approvals</h3>
-              <p className="stat-number">{unapprovedFarmhouses.length}</p>
-            </div>
+      {/* ── Sidebar ── */}
+      <aside className={`adm-sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
+        <div className="adm-sidebar-header">
+          <div className="adm-sidebar-logo">
+            <span className="adm-logo-icon">🏡</span>
+            {sidebarOpen && <span className="adm-logo-text">FarmHouse Admin</span>}
           </div>
-        </>
-      )}
-
-      <div className="admin-tabs">
-        <button 
-          onClick={() => setActiveTab('overview')}
-          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-        >
-          Overview
-        </button>
-        <button 
-          onClick={() => setActiveTab('users')}
-          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-        >
-          Users
-        </button>
-        <button 
-          onClick={() => setActiveTab('farmhouses')}
-          className={`tab-btn ${activeTab === 'farmhouses' ? 'active' : ''}`}
-        >
-          Farm Houses
-        </button>
-        <button 
-          onClick={() => setActiveTab('bookings')}
-          className={`tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
-        >
-          Bookings
-        </button>
-      </div>
-
-      {activeTab === 'users' && (
-        <div className="section">
-          <h2>All Users</h2>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>#{user.id}</td>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>{user.phone}</td>
-                  <td>{user.role}</td>
-                  <td>
-                    <span className={`badge ${user.isBlocked ? 'blocked' : 'active'}`}>
-                      {user.isBlocked ? 'Blocked' : 'Active'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <button className="adm-sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Icon d={sidebarOpen ? icons.close : icons.menu} size={18} />
+          </button>
         </div>
-      )}
 
-      {activeTab === 'farmhouses' && (
-        <div className="section">
-          <h2>Farm Houses Management</h2>
-          
-          {/* Add Farm House Form */}
-          <div className="add-farmhouse-form-container" style={{ marginBottom: '30px', marginTop: '20px' }}>
-            <button 
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="btn btn-primary"
-              style={{ marginBottom: '20px' }}
+        <nav className="adm-nav">
+          {navItems.map(item => (
+            <button
+              key={item.key}
+              className={`adm-nav-item ${activeTab === item.key ? 'active' : ''}`}
+              onClick={() => { setActiveTab(item.key); setSearchTerm(''); setFilterStatus('all'); }}
             >
-              {showAddForm ? 'Cancel' : '+ Add New Farm House'}
+              <div className="adm-nav-icon"><Icon d={item.icon} size={20} /></div>
+              {sidebarOpen && (
+                <>
+                  <span className="adm-nav-label">{item.label}</span>
+                  {item.count !== undefined && (
+                    <span className={`adm-nav-count ${item.badge && item.count > 0 ? 'badge' : ''}`}>
+                      {item.count}
+                    </span>
+                  )}
+                </>
+              )}
             </button>
+          ))}
+        </nav>
 
-            {showAddForm && (
-              <form onSubmit={handleAddFarmhouse} className="add-farmhouse-form" style={{ 
-                backgroundColor: '#f9f9f9', 
-                padding: '20px', 
-                borderRadius: '8px',
-                border: '1px solid #ddd'
-              }}>
-                {submitSuccess && <div className="success-message" style={{ color: 'green', marginBottom: '15px' }}>{submitSuccess}</div>}
-                {submitError && <div className="error-message" style={{ color: 'red', marginBottom: '15px' }}>{submitError}</div>}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Farm House Name *"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    style={{
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px'
-                    }}
-                  />
-                  <input
-                    type="text"
-                    name="location"
-                    placeholder="Location *"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    required
-                    style={{
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px'
-                    }}
-                  />
-                </div>
-
-                <textarea
-                  name="description"
-                  placeholder="Description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    marginBottom: '15px',
-                    fontFamily: 'Arial, sans-serif'
-                  }}
-                />
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                  <input
-                    type="number"
-                    name="pricePerDay"
-                    placeholder="Price Per Day (₹) *"
-                    value={formData.pricePerDay}
-                    onChange={handleInputChange}
-                    required
-                    step="100"
-                    style={{
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px'
-                    }}
-                  />
-                  <input
-                    type="number"
-                    name="maxGuests"
-                    placeholder="Max Guests"
-                    value={formData.maxGuests}
-                    onChange={handleInputChange}
-                    min="1"
-                    style={{
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px'
-                    }}
-                  />
-                </div>
-
-                <input
-                  type="text"
-                  name="imageUrl"
-                  placeholder="Image URL"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    marginBottom: '15px'
-                  }}
-                />
-
-                <textarea
-                  name="amenities"
-                  placeholder="Amenities (comma separated: WiFi, Pool, Kitchen, etc.)"
-                  value={formData.amenities}
-                  onChange={handleInputChange}
-                  rows="3"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    marginBottom: '15px',
-                    fontFamily: 'Arial, sans-serif'
-                  }}
-                />
-
-                <button type="submit" className="btn btn-primary">
-                  Add Farm House
-                </button>
-              </form>
+        <div className="adm-sidebar-footer">
+          <div className="adm-user-info">
+            <div className="adm-user-avatar">{currentUser.name?.[0]?.toUpperCase() || 'A'}</div>
+            {sidebarOpen && (
+              <div className="adm-user-details">
+                <span className="adm-user-name">{currentUser.name || 'Admin'}</span>
+                <span className="adm-user-role">ADMIN</span>
+              </div>
             )}
           </div>
-
-          <h3>Pending Approvals ({unapprovedFarmhouses.length})</h3>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Location</th>
-                <th>Owner</th>
-                <th>Price/Night</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {unapprovedFarmhouses.map((fh) => (
-                <tr key={fh.id}>
-                  <td>{fh.name}</td>
-                  <td>{fh.location}</td>
-                  <td>{fh.ownerName}</td>
-                  <td>₹{fh.pricePerDay}</td>
-                  <td>
-                    <span className="badge pending">Pending</span>
-                  </td>
-                  <td>
-                    <button 
-                      onClick={() => handleApproveFarmhouse(fh.id)}
-                      className="approve-btn"
-                    >
-                      Approve
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteFarmhouse(fh.id)}
-                      className="delete-btn"
-                    >
-                      Reject
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <h3>All Farm Houses</h3>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Location</th>
-                <th>Owner</th>
-                <th>Price/Night</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {farmhouses.map((fh) => (
-                <tr key={fh.id}>
-                  <td>{fh.name}</td>
-                  <td>{fh.location}</td>
-                  <td>{fh.ownerName}</td>
-                  <td>₹{fh.pricePerDay}</td>
-                  <td>
-                    <span className={`badge ${fh.isApproved ? 'approved' : 'pending'}`}>
-                      {fh.isApproved ? 'Approved' : 'Pending'}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      onClick={() => handleDeleteFarmhouse(fh.id)}
-                      className="delete-btn"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      )}
+      </aside>
 
-      {activeTab === 'bookings' && (
-        <div className="section">
-          <h2>All Bookings</h2>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Booking ID</th>
-                <th>Guest</th>
-                <th>Farm House</th>
-                <th>Check-in</th>
-                <th>Check-out</th>
-                <th>Total</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((b) => (
-                <tr key={b.id}>
-                  <td>#{b.id}</td>
-                  <td>{b.userName}</td>
-                  <td>{b.farmHouseName}</td>
-                  <td>{b.startDate}</td>
-                  <td>{b.endDate}</td>
-                  <td>₹{b.totalPrice}</td>
-                  <td>
-                    <span className={`status-badge status-${b.status.toLowerCase()}`}>
-                      {b.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* ── Main Content ── */}
+      <main className="adm-main">
+        {/* Header */}
+        <header className="adm-header">
+          <div className="adm-header-left">
+            <h1 className="adm-page-title">
+              {navItems.find(n => n.key === activeTab)?.label || 'Dashboard'}
+            </h1>
+            <p className="adm-page-subtitle">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="adm-header-right">
+            <button className="adm-icon-btn" onClick={fetchData} title="Refresh">
+              <Icon d={icons.refresh} size={18} />
+            </button>
+            <button className="adm-icon-btn" title="Notifications">
+              <Icon d={icons.bell} size={18} />
+              {stats.pendingApprovals > 0 && <span className="adm-notif-dot">{stats.pendingApprovals}</span>}
+            </button>
+          </div>
+        </header>
+
+        <div className="adm-content">
+
+          {/* ═══ OVERVIEW TAB ═══ */}
+          {activeTab === 'overview' && (
+            <div className="adm-overview">
+              <div className="adm-stats-grid">
+                <StatCard
+                  title="Total Users"
+                  value={stats.totalUsers}
+                  subtitle="Registered accounts"
+                  iconPath={icons.users}
+                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                  trend={12}
+                />
+                <StatCard
+                  title="Total Bookings"
+                  value={stats.totalBookings}
+                  subtitle="All time bookings"
+                  iconPath={icons.bookings}
+                  gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+                  trend={8}
+                />
+                <StatCard
+                  title="Total Payments"
+                  value={stats.totalPayments}
+                  subtitle="Processed transactions"
+                  iconPath={icons.payments}
+                  gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+                  trend={5}
+                />
+                <StatCard
+                  title="Pending Approvals"
+                  value={stats.pendingApprovals}
+                  subtitle="Awaiting review"
+                  iconPath={icons.approve}
+                  gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+                />
+              </div>
+
+              <div className="adm-overview-bottom">
+                {/* Recent Bookings */}
+                <div className="adm-widget">
+                  <div className="adm-widget-header">
+                    <h3>Recent Bookings</h3>
+                    <button className="adm-link-btn" onClick={() => setActiveTab('bookings')}>View All →</button>
+                  </div>
+                  <div className="adm-widget-body">
+                    {bookings.slice(0, 5).map(b => (
+                      <div className="adm-list-row" key={b.id}>
+                        <div className="adm-list-avatar">{b.userName?.[0] || 'U'}</div>
+                        <div className="adm-list-info">
+                          <span className="adm-list-name">{b.userName || 'Unknown'}</span>
+                          <span className="adm-list-sub">{b.farmHouseName || b.farmhouseName || '—'}</span>
+                        </div>
+                        <span className={`adm-badge adm-status-${(b.status || '').toLowerCase()}`}>
+                          {b.status}
+                        </span>
+                        <span className="adm-list-price">₹{b.totalPrice}</span>
+                      </div>
+                    ))}
+                    {bookings.length === 0 && <p className="adm-empty">No bookings yet</p>}
+                  </div>
+                </div>
+
+                {/* Pending Approvals */}
+                <div className="adm-widget">
+                  <div className="adm-widget-header">
+                    <h3>Pending Approvals</h3>
+                    <button className="adm-link-btn" onClick={() => setActiveTab('approvals')}>View All →</button>
+                  </div>
+                  <div className="adm-widget-body">
+                    {unapprovedFarmhouses.slice(0, 5).map(fh => (
+                      <div className="adm-list-row" key={fh.id}>
+                        <div className="adm-list-avatar" style={{ background: 'linear-gradient(135deg,#43e97b,#38f9d7)' }}>🏡</div>
+                        <div className="adm-list-info">
+                          <span className="adm-list-name">{fh.name}</span>
+                          <span className="adm-list-sub">{fh.location}</span>
+                        </div>
+                        <span className="adm-badge adm-status-pending">Pending</span>
+                        <button className="adm-btn-sm adm-btn-approve" onClick={() => handleApprove(fh.id)}>Approve</button>
+                      </div>
+                    ))}
+                    {unapprovedFarmhouses.length === 0 && <p className="adm-empty">✅ All caught up!</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Activity Chart */}
+              <div className="adm-chart-widget">
+                <div className="adm-widget-header">
+                  <h3>📊 Monthly Activity Overview</h3>
+                </div>
+                <div className="adm-chart-content">
+                  <div className="adm-chart-group">
+                    <p className="adm-chart-label">Users</p>
+                    <MiniBarChart data={[4,7,12,8,15,22,18,25,30,28,35,stats.totalUsers]} color="linear-gradient(180deg,#764ba2,#667eea)" />
+                  </div>
+                  <div className="adm-chart-group">
+                    <p className="adm-chart-label">Bookings</p>
+                    <MiniBarChart data={[2,5,8,6,12,18,14,20,25,22,28,stats.totalBookings]} color="linear-gradient(180deg,#f5576c,#f093fb)" />
+                  </div>
+                  <div className="adm-chart-group">
+                    <p className="adm-chart-label">Farm Houses</p>
+                    <MiniBarChart data={[1,2,3,5,8,10,12,14,15,16,18,farmhouses.length]} color="linear-gradient(180deg,#00f2fe,#4facfe)" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ═══ USERS TAB ═══ */}
+          {activeTab === 'users' && (
+            <div className="adm-section">
+              <div className="adm-toolbar">
+                <div className="adm-search-wrap">
+                  <Icon d={icons.search} size={16} />
+                  <input
+                    className="adm-search"
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="adm-filter-wrap">
+                  <Icon d={icons.filter} size={16} />
+                  <select className="adm-filter" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="blocked">Blocked</option>
+                  </select>
+                </div>
+                <span className="adm-count-tag">{filteredUsers.length} users</span>
+              </div>
+
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map(user => (
+                      <tr key={user.id}>
+                        <td>
+                          <div className="adm-user-cell">
+                            <div className="adm-avatar">{user.name?.[0]?.toUpperCase() || '?'}</div>
+                            <span>{user.name}</span>
+                          </div>
+                        </td>
+                        <td>{user.email}</td>
+                        <td>{user.phone || '—'}</td>
+                        <td><span className={`adm-role-badge adm-role-${user.role?.toLowerCase()}`}>{user.role}</span></td>
+                        <td>
+                          <span className={`adm-badge ${user.isBlocked ? 'adm-status-cancelled' : 'adm-status-confirmed'}`}>
+                            {user.isBlocked ? '🚫 Blocked' : '✅ Active'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredUsers.length === 0 && <div className="adm-table-empty">No users found</div>}
+              </div>
+            </div>
+          )}
+
+          {/* ═══ FARMHOUSES TAB ═══ */}
+          {activeTab === 'farmhouses' && (
+            <div className="adm-section">
+              <div className="adm-toolbar">
+                <div className="adm-search-wrap">
+                  <Icon d={icons.search} size={16} />
+                  <input
+                    className="adm-search"
+                    placeholder="Search farm houses..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="adm-filter-wrap">
+                  <Icon d={icons.filter} size={16} />
+                  <select className="adm-filter" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+                <span className="adm-count-tag">{filteredFarmhouses.length} properties</span>
+                <button className="adm-btn adm-btn-primary" onClick={() => setShowAddModal(true)}>
+                  <Icon d={icons.add} size={16} /> Add Farm House
+                </button>
+              </div>
+
+              <div className="adm-cards-grid">
+                {filteredFarmhouses.map(fh => (
+                  <div key={fh.id} className="adm-fh-card">
+                    <div className="adm-fh-img-wrap">
+                      {fh.imageUrl
+                        ? <img src={fh.imageUrl} alt={fh.name} className="adm-fh-img" onError={e => { e.target.style.display='none'; }} />
+                        : <div className="adm-fh-img-placeholder">🏡</div>
+                      }
+                      <span className={`adm-fh-status-badge ${fh.isApproved ? 'approved' : 'pending'}`}>
+                        {fh.isApproved ? 'Approved' : 'Pending'}
+                      </span>
+                    </div>
+                    <div className="adm-fh-body">
+                      <h4 className="adm-fh-name">{fh.name}</h4>
+                      <p className="adm-fh-loc">📍 {fh.location}</p>
+                      <p className="adm-fh-owner">👤 {fh.ownerName || 'N/A'}</p>
+                      <p className="adm-fh-price">₹{fh.pricePerDay?.toLocaleString()}<span>/night</span></p>
+                    </div>
+                    <div className="adm-fh-actions">
+                      <button className="adm-btn-sm adm-btn-view" onClick={() => { setSelectedItem(fh); setShowDetailModal(true); }}>
+                        <Icon d={icons.eye} size={14} /> View
+                      </button>
+                      {!fh.isApproved && (
+                        <button className="adm-btn-sm adm-btn-approve" onClick={() => handleApprove(fh.id)}>
+                          <Icon d={icons.approve} size={14} /> Approve
+                        </button>
+                      )}
+                      <button className="adm-btn-sm adm-btn-danger" onClick={() => handleDelete(fh.id)}>
+                        <Icon d={icons.delete} size={14} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {filteredFarmhouses.length === 0 && <div className="adm-table-empty">No farm houses found</div>}
+            </div>
+          )}
+
+          {/* ═══ BOOKINGS TAB ═══ */}
+          {activeTab === 'bookings' && (
+            <div className="adm-section">
+              <div className="adm-toolbar">
+                <div className="adm-search-wrap">
+                  <Icon d={icons.search} size={16} />
+                  <input
+                    className="adm-search"
+                    placeholder="Search bookings..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="adm-filter-wrap">
+                  <Icon d={icons.filter} size={16} />
+                  <select className="adm-filter" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="pending">Pending</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <span className="adm-count-tag">{filteredBookings.length} bookings</span>
+              </div>
+
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Guest</th>
+                      <th>Farm House</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredBookings.map(b => (
+                      <tr key={b.id}>
+                        <td><span className="adm-id-badge">#{b.id}</span></td>
+                        <td>
+                          <div className="adm-user-cell">
+                            <div className="adm-avatar" style={{ background: 'linear-gradient(135deg,#f093fb,#f5576c)' }}>
+                              {b.userName?.[0] || 'U'}
+                            </div>
+                            <span>{b.userName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td>{b.farmHouseName || b.farmhouseName || '—'}</td>
+                        <td>
+                          <div className="adm-date-cell">
+                            <Icon d={icons.calendar} size={14} />
+                            {b.startDate}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="adm-date-cell">
+                            <Icon d={icons.calendar} size={14} />
+                            {b.endDate}
+                          </div>
+                        </td>
+                        <td><strong>₹{b.totalPrice?.toLocaleString()}</strong></td>
+                        <td>
+                          <span className={`adm-badge adm-status-${(b.status || '').toLowerCase()}`}>
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredBookings.length === 0 && <div className="adm-table-empty">No bookings found</div>}
+              </div>
+            </div>
+          )}
+
+          {/* ═══ APPROVALS TAB ═══ */}
+          {activeTab === 'approvals' && (
+            <div className="adm-section">
+              <div className="adm-section-banner">
+                <Icon d={icons.approve} size={22} color="#43e97b" />
+                <div>
+                  <h3>Pending Farmhouse Approvals</h3>
+                  <p>{unapprovedFarmhouses.length} properties awaiting your review</p>
+                </div>
+              </div>
+
+              {unapprovedFarmhouses.length === 0 ? (
+                <div className="adm-all-clear">
+                  <div className="adm-all-clear-icon">✅</div>
+                  <h3>All caught up!</h3>
+                  <p>There are no pending approvals at this time.</p>
+                </div>
+              ) : (
+                <div className="adm-table-wrap">
+                  <table className="adm-table">
+                    <thead>
+                      <tr>
+                        <th>Farm House</th>
+                        <th>Location</th>
+                        <th>Owner</th>
+                        <th>Price/Night</th>
+                        <th>Max Guests</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unapprovedFarmhouses.map(fh => (
+                        <tr key={fh.id}>
+                          <td>
+                            <div className="adm-fh-cell">
+                              <div className="adm-fh-thumb">🏡</div>
+                              <span>{fh.name}</span>
+                            </div>
+                          </td>
+                          <td>📍 {fh.location}</td>
+                          <td>👤 {fh.ownerName || 'N/A'}</td>
+                          <td><strong>₹{fh.pricePerDay?.toLocaleString()}</strong></td>
+                          <td>{fh.maxGuests || '—'} guests</td>
+                          <td>
+                            <div className="adm-action-btns">
+                              <button className="adm-btn-sm adm-btn-view" onClick={() => { setSelectedItem(fh); setShowDetailModal(true); }}>
+                                <Icon d={icons.eye} size={14} /> Preview
+                              </button>
+                              <button className="adm-btn-sm adm-btn-approve" onClick={() => handleApprove(fh.id)}>
+                                <Icon d={icons.approve} size={14} /> Approve
+                              </button>
+                              <button className="adm-btn-sm adm-btn-danger" onClick={() => handleDelete(fh.id)}>
+                                <Icon d={icons.delete} size={14} /> Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </main>
+
+      {/* ── Add Farm House Modal ── */}
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="➕ Add New Farm House">
+        <form onSubmit={handleAddFarmhouse} className="adm-form">
+          <div className="adm-form-row">
+            <div className="adm-form-group">
+              <label>Farm House Name <span className="req">*</span></label>
+              <input required placeholder="Enter name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div className="adm-form-group">
+              <label>Location <span className="req">*</span></label>
+              <input required placeholder="City, State" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
+            </div>
+          </div>
+          <div className="adm-form-group">
+            <label>Description</label>
+            <textarea rows={3} placeholder="Describe the property..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+          </div>
+          <div className="adm-form-row">
+            <div className="adm-form-group">
+              <label>Price Per Day (₹) <span className="req">*</span></label>
+              <input required type="number" step="100" min="0" placeholder="e.g. 5000" value={formData.pricePerDay} onChange={e => setFormData({...formData, pricePerDay: e.target.value})} />
+            </div>
+            <div className="adm-form-group">
+              <label>Max Guests</label>
+              <input type="number" min="1" placeholder="e.g. 10" value={formData.maxGuests} onChange={e => setFormData({...formData, maxGuests: e.target.value})} />
+            </div>
+          </div>
+          <div className="adm-form-group">
+            <label>Image URL</label>
+            <input type="url" placeholder="https://..." value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} />
+          </div>
+          <div className="adm-form-group">
+            <label>Amenities <span className="adm-hint">(comma separated)</span></label>
+            <input placeholder="WiFi, Pool, Kitchen, BBQ..." value={formData.amenities} onChange={e => setFormData({...formData, amenities: e.target.value})} />
+          </div>
+          <div className="adm-form-footer">
+            <button type="button" className="adm-btn adm-btn-ghost" onClick={() => setShowAddModal(false)}>Cancel</button>
+            <button type="submit" className="adm-btn adm-btn-primary" disabled={formLoading}>
+              {formLoading ? 'Adding...' : '✅ Add Farm House'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Detail Modal ── */}
+      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title="🏡 Farm House Details">
+        {selectedItem && (
+          <div className="adm-detail-view">
+            {selectedItem.imageUrl && (
+              <img src={selectedItem.imageUrl} alt={selectedItem.name} className="adm-detail-img" onError={e => { e.target.style.display='none'; }} />
+            )}
+            <div className="adm-detail-grid">
+              <div><label>Name</label><p>{selectedItem.name}</p></div>
+              <div><label>Location</label><p>📍 {selectedItem.location}</p></div>
+              <div><label>Owner</label><p>👤 {selectedItem.ownerName || 'N/A'}</p></div>
+              <div><label>Price/Night</label><p>₹{selectedItem.pricePerDay?.toLocaleString()}</p></div>
+              <div><label>Max Guests</label><p>{selectedItem.maxGuests || '—'}</p></div>
+              <div><label>Status</label><p><span className={`adm-badge ${selectedItem.isApproved ? 'adm-status-confirmed' : 'adm-status-pending'}`}>{selectedItem.isApproved ? 'Approved' : 'Pending'}</span></p></div>
+              {selectedItem.description && <div className="adm-detail-full"><label>Description</label><p>{selectedItem.description}</p></div>}
+              {selectedItem.amenities?.length > 0 && (
+                <div className="adm-detail-full">
+                  <label>Amenities</label>
+                  <div className="adm-amenities-list">
+                    {(Array.isArray(selectedItem.amenities) ? selectedItem.amenities : selectedItem.amenities.split(',')).map((a, i) => (
+                      <span key={i} className="adm-amenity-tag">{a.trim()}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="adm-form-footer">
+              {!selectedItem.isApproved && (
+                <button className="adm-btn adm-btn-primary" onClick={() => { handleApprove(selectedItem.id); setShowDetailModal(false); }}>
+                  <Icon d={icons.approve} size={16} /> Approve
+                </button>
+              )}
+              <button className="adm-btn adm-btn-danger" onClick={() => { handleDelete(selectedItem.id); setShowDetailModal(false); }}>
+                <Icon d={icons.delete} size={16} /> Delete
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── Confirm Dialog ── */}
+      <Modal open={confirmDialog.open} onClose={() => setConfirmDialog({ open: false, message: '', onConfirm: null })} title="⚠️ Confirm Action">
+        <div className="adm-confirm">
+          <p>{confirmDialog.message}</p>
+          <div className="adm-confirm-btns">
+            <button className="adm-btn adm-btn-ghost" onClick={() => setConfirmDialog({ open: false, message: '', onConfirm: null })}>
+              Cancel
+            </button>
+            <button className="adm-btn adm-btn-danger" onClick={confirmDialog.onConfirm}>
+              Yes, Delete
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
