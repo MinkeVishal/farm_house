@@ -55,6 +55,11 @@ public class BookingService {
             throw new RuntimeException("Farm house is not available");
         }
         
+        // Check approval status
+        if (farmHouse.getIsApproved() == null || !farmHouse.getIsApproved()) {
+            throw new RuntimeException("Farm house is not approved by admin");
+        }
+        
         // Check date conflicts
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
             dto.getFarmHouseId(),

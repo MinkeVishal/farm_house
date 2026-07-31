@@ -48,7 +48,7 @@ public class FarmHouseService {
         farmHouse.setAmenities(dto.getAmenities());
         farmHouse.setImageUrl(dto.getImageUrl());
         farmHouse.setAvailable(true);
-        farmHouse.setIsApproved(true);
+        farmHouse.setIsApproved(false);
         
         FarmHouse savedFarmHouse = farmHouseRepository.save(farmHouse);
         return convertToDTO(savedFarmHouse);

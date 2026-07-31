@@ -27,28 +27,6 @@ public class AdminInitializer {
     public ApplicationRunner initializeAdminAccounts() {
         return args -> {
             try {
-                // Check and create SUPERADMIN account
-                if (!userRepository.existsByEmail("superadmin@farmhouse.com")) {
-                    User superadmin = new User();
-                    superadmin.setName("Super Administrator");
-                    superadmin.setEmail("superadmin@farmhouse.com");
-                    superadmin.setPassword(new BCryptPasswordEncoder().encode("SuperAdmin@123"));
-                    superadmin.setPhone("9999999999");
-                    superadmin.setRole(User.Role.SUPERADMIN);
-                    superadmin.setIsVerified(true);
-                    superadmin.setIsBlocked(false);
-                    superadmin.setCreatedAt(LocalDateTime.now());
-                    superadmin.setUpdatedAt(LocalDateTime.now());
-                    userRepository.save(superadmin);
-                    System.out.println("✓ SUPERADMIN account created: superadmin@farmhouse.com / SuperAdmin@123");
-                } else {
-                    System.out.println("✓ SUPERADMIN account already exists");
-                }
-            } catch (Exception e) {
-                System.err.println("✗ Failed to create SUPERADMIN account: " + e.getMessage());
-            }
-            
-            try {
                 // Check and create ADMIN account
                 if (!userRepository.existsByEmail("admin@farmhouse.com")) {
                     User admin = new User();
