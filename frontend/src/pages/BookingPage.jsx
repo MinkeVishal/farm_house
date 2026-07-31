@@ -93,8 +93,13 @@ function BookingPage({ user }) {
           const processResponse = await paymentAPI.processPayment(paymentResponse.data.payment.id);
           
           if (processResponse.data.success) {
-            alert('Booking confirmed! Payment successful.');
-            navigate('/my-bookings');
+            navigate('/my-bookings', {
+              replace: true,
+              state: {
+                bookingSuccess: true,
+                bookingMessage: 'Your booking is confirmed successfully!'
+              }
+            });
           }
         }
       }

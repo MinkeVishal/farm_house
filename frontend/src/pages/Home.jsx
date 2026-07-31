@@ -209,7 +209,7 @@ function Home({ user }) {
     { id: 5, name: 'Heritage Farm Resort', location: 'Rajasthan', description: 'Traditional farmhouse preserving royal Rajasthani architecture and cultural heritage experiences', pricePerDay: 4000, maxGuests: 6, bedrooms: 3, bathrooms: 4, imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&auto=format&fit=crop' },
   ];
 
-  const displayList = filteredFarmhouses.length > 0 ? filteredFarmhouses : (loading ? [] : fallbackFarmhouses);
+  const displayList = (filteredFarmhouses.length > 0 ? filteredFarmhouses : (loading ? [] : fallbackFarmhouses)).slice(0, 4);
 
   return (
     <div className="home-page">
@@ -353,6 +353,14 @@ function Home({ user }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {!loading && displayList.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem' }}>
+            <Link to="/farmhouses" className="btn-lux-primary" style={{ padding: '0.8rem 2.5rem', borderRadius: '30px' }}>
+              See More →
+            </Link>
           </div>
         )}
 

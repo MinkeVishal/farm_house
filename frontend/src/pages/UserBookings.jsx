@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { bookingAPI } from '../api/axiosInstance';
 
 function UserBookings({ user }) {
+  const location = useLocation();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchUserBookings();
   }, [user.id]);
+
+  useEffect(() => {
+    if (location.state?.bookingSuccess) {
+      setSuccessMessage(location.state.bookingMessage || 'Your booking is confirmed successfully!');
+    }
+  }, [location.state]);
 
   const fetchUserBookings = async () => {
     try {
@@ -44,6 +53,12 @@ function UserBookings({ user }) {
   return (
     <div className="user-bookings-container">
       <h1>My Bookings</h1>
+
+      {successMessage && (
+        <div className="success-message" style={{ marginBottom: '16px', padding: '12px', background: '#e8f5e9', color: '#2e7d32', borderRadius: '8px' }}>
+          {successMessage}
+        </div>
+      )}
 
       {error && <div className="error-message">{error}</div>}
 
