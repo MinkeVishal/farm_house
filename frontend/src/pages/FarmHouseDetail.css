@@ -561,6 +561,356 @@
   box-shadow: 0 8px 22px rgba(102,126,234,0.5);
 }
 
+/* ── EXPERIENCES PANEL & WEATHER WIDGET ── */
+.fd-exp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.fd-weather-widget h3,
+.fd-timeline-section h3,
+.fd-packing-section h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1a202c;
+  margin: 0 0 1rem;
+}
+
+.fd-weather-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7);
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.fd-weather-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.fd-weather-lbl {
+  font-size: 0.72rem;
+  color: #718096;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fd-weather-val {
+  font-size: 1.1rem;
+  color: #2d3748;
+  font-weight: 800;
+}
+
+/* ── DAY IN THE LIFE TIMELINE ── */
+.fd-timeline-subtitle,
+.fd-packing-subtitle {
+  font-size: 0.9rem;
+  color: #718096;
+  margin: -0.5rem 0 1.25rem;
+  line-height: 1.5;
+}
+
+.fd-timeline-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  background: #edf2f7;
+  padding: 0.4rem;
+  border-radius: 12px;
+}
+
+.fd-time-btn {
+  flex: 1;
+  padding: 0.65rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: #718096;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.fd-time-btn:hover {
+  color: #4a5568;
+}
+
+.fd-time-btn.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.fd-timeline-card {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.75rem;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: all 0.3s ease;
+}
+
+.fd-timeline-card.dark {
+  color: #f7fafc;
+}
+
+.fd-timeline-card.dark h4 {
+  color: white;
+}
+
+.fd-timeline-card.dark p {
+  color: #e2e8f0;
+}
+
+.fd-timeline-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.fd-timeline-content h4 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #2d3748;
+  margin: 0 0 0.35rem;
+}
+
+.fd-timeline-content p {
+  font-size: 0.95rem;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── PACKING ASSISTANT ── */
+.fd-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  background: #edf2f7;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.fd-progress-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.fd-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fd-progress-lbl {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4a5568;
+  min-width: 90px;
+  text-align: right;
+}
+
+.fd-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.fd-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.fd-check-item:hover {
+  border-color: #cbd5e0;
+  background: #f7fafc;
+}
+
+.fd-check-item.checked {
+  border-color: #b5f5ec;
+  background: #e6fffb;
+}
+
+.fd-check-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e0;
+  accent-color: #13c2c2;
+  cursor: pointer;
+}
+
+.fd-check-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+  transition: color 0.2s;
+}
+
+.fd-check-item.checked .fd-check-text {
+  color: #006d75;
+  text-decoration: line-through;
+  opacity: 0.85;
+}
+
+/* ── CALCULATOR INPUTS & BOOKING CARD ── */
+.fd-calculator-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.fd-calc-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.fd-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fd-input-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fd-input-group input {
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.fd-input-group input:focus {
+  border-color: #667eea;
+}
+
+.fd-addons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.fd-addons-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fd-addons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #f7fafc;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.fd-addon-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fd-addon-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+.fd-addon-lbl {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+/* ── BILL RECEIPT ── */
+.fd-bill-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  animation: fd-slideDown 0.3s ease;
+}
+
+@keyframes fd-slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fd-bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.fd-bill-row span:last-child {
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.fd-divider-dotted {
+  border-top: 1.5px dotted #cbd5e0;
+  margin: 0.4rem 0 0.2rem;
+}
+
+.fd-grand-total-row {
+  margin-bottom: 1.25rem;
+}
+
+.fd-grand-total-row .fd-price {
+  background: linear-gradient(135deg, #10b981, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ══ RESPONSIVE ══ */
 @media (max-width: 980px) {
   .fd-main {
