@@ -140,11 +140,11 @@ function About() {
         <div className="ab-hero-blob b2" />
         <div className="ab-hero-blob b3" />
         <div className="ab-hero-inner">
-          <span className="ab-chip">🌿 OUR STORY</span>
-          <h1>
+          {/* <span className="ab-chip">🌿 OUR STORY</span> */}
+          {/* <h1>
             We Believe Every Journey<br />
             <span className="ab-hero-gradient">Deserves a Perfect Nest</span>
-          </h1>
+          </h1> */}
           <p>FarmHouse Booking is India's most trusted luxury farmhouse platform — connecting dreamers to destinations, and guests to unforgettable memories since 2019.</p>
           <div className="ab-hero-cta">
             <Link to="/farmhouses" className="ab-btn-primary">Explore All Estates →</Link>
