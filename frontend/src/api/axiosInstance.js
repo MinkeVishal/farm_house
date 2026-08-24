@@ -105,3 +105,13 @@ export const paymentAPI = {
   refundPayment: (id) =>
     axios.post(`${API_BASE_URL}/payments/${id}/refund`),
 };
+
+// Review API
+export const reviewAPI = {
+  getReviewsForFarmHouse: (farmHouseId) =>
+    axios.get(`${API_BASE_URL}/reviews/farmhouse/${farmHouseId}`),
+  createReview: (data, userId) =>
+    axios.post(`${API_BASE_URL}/reviews`, data, {
+      headers: getHeaders(userId),
+    }),
+};

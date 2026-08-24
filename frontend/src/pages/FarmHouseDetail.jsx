@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { farmhouseAPI } from "../api/axiosInstance";
+import { farmhouseAPI, reviewAPI } from "../api/axiosInstance";
 import "./FarmHouseDetail.css";
 
 const getLocationType = (location = "") => {
@@ -131,9 +131,54 @@ function FarmHouseDetail({ user }) {
     adventure: false,
   });
 
+  // Review states
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [reviewMsg, setReviewMsg] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+
   useEffect(() => {
     fetchFarmhouseDetails();
+    fetchReviews();
   }, [id]);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await reviewAPI.getReviewsForFarmHouse(id);
+      if (res.data.success) {
+        setReviews(res.data.reviews || []);
+      }
+    } catch (err) {
+      console.error("Failed to load reviews", err);
+    }
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      setReviewMsg("Please log in to submit a review.");
+      return;
+    }
+    setReviewLoading(true);
+    try {
+      const payload = {
+        farmHouseId: parseInt(id),
+        rating: newReview.rating,
+        comment: newReview.comment,
+      };
+      const res = await reviewAPI.createReview(payload, user.id);
+      if (res.data.success) {
+        setReviewMsg("Review added successfully!");
+        setNewReview({ rating: 5, comment: "" });
+        fetchReviews(); // refresh
+      }
+    } catch (err) {
+      setReviewMsg("Failed to add review.");
+    } finally {
+      setReviewLoading(false);
+      setTimeout(() => setReviewMsg(""), 4000);
+    }
+  };
 
   const parseImageGallery = (data) => {
     if (!data) return [defaultImage];
@@ -364,7 +409,7 @@ function FarmHouseDetail({ user }) {
         <div className="fd-detail-col">
           {/* Tabs */}
           <div className="fd-tabs">
-            {["about", "experience", "amenities", "host"].map((tab) => (
+            {["about", "experience", "amenities", "host", "reviews"].map((tab) => (
               <button
                 key={tab}
                 className={`fd-tab ${activeTab === tab ? "active" : ""}`}
@@ -376,7 +421,9 @@ function FarmHouseDetail({ user }) {
                   ? "✨ Live Experience"
                   : tab === "amenities"
                   ? "🌿 Amenities"
-                  : "🏠 Host"}
+                  : tab === "host"
+                  ? "🏠 Host"
+                  : "💬 Reviews"}
               </button>
             ))}
           </div>
@@ -549,6 +596,68 @@ function FarmHouseDetail({ user }) {
                     memorable. Reach out for any special requirements.
                   </p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab: Reviews */}
+          {activeTab === "reviews" && (
+            <div className="fd-panel">
+              <h2>Guest Reviews</h2>
+              
+              <div className="fd-review-form">
+                <h3>Share Your Experience</h3>
+                {reviewMsg && <p className="fd-review-msg">{reviewMsg}</p>}
+                {user ? (
+                  <form onSubmit={submitReview}>
+                    <div className="fd-review-input-group">
+                      <label>Rating:</label>
+                      <select 
+                        value={newReview.rating} 
+                        onChange={(e) => setNewReview({ ...newReview, rating: parseInt(e.target.value) })}
+                      >
+                        {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} Star{n>1?'s':''}</option>)}
+                      </select>
+                    </div>
+                    <div className="fd-review-input-group">
+                      <label>Comment:</label>
+                      <textarea 
+                        rows="3" 
+                        required 
+                        value={newReview.comment}
+                        onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                        placeholder="Tell us about your stay..."
+                      />
+                    </div>
+                    <button type="submit" className="fd-btn-submit-review" disabled={reviewLoading}>
+                      {reviewLoading ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </form>
+                ) : (
+                  <p className="fd-login-to-review">Please <Link to="/login">login</Link> to leave a review.</p>
+                )}
+              </div>
+
+              <div className="fd-reviews-list">
+                {reviews.length > 0 ? (
+                  reviews.map((r) => (
+                    <div key={r.id} className="fd-review-card">
+                      <div className="fd-review-header">
+                        <span className="fd-review-avatar">{r.userName.charAt(0).toUpperCase()}</span>
+                        <div className="fd-review-meta">
+                          <strong>{r.userName}</strong>
+                          <span className="fd-review-date">{new Date(r.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="fd-review-rating">
+                          {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+                        </div>
+                      </div>
+                      <p className="fd-review-comment">{r.comment}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="fd-empty-reviews">No reviews yet. Be the first to review!</p>
+                )}
               </div>
             </div>
           )}

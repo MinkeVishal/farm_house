@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { farmhouseAPI } from '../api/axiosInstance';
+import { farmhouseAPI, reviewAPI } from '../api/axiosInstance';
 import ExperienceChatbot from '../components/ExperienceChatbot';
 import BudgetCalculator from '../components/BudgetCalculator';
 
@@ -91,8 +91,9 @@ function Home({ user }) {
   // Testimonials
   const [testimonials, setTestimonials] = useState(TESTIMONIALS);
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
-  const [newReview, setNewReview] = useState({ name: '', role: '', comment: '', rating: 5 });
+  const [newReview, setNewReview] = useState({ farmHouseId: '', comment: '', rating: 5 });
   const [reviewMsg, setReviewMsg] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   const featuredRef = useRef(null);
 
@@ -188,16 +189,45 @@ function Home({ user }) {
   };
 
   // Reviews
-  const handleAddReview = (e) => {
+  const handleAddReview = async (e) => {
     e.preventDefault();
-    if (!newReview.name || !newReview.comment) return;
-    const added = { id: Date.now(), ...newReview, avatar: '⭐' };
-    const updated = [...testimonials, added];
-    setTestimonials(updated);
-    setActiveReviewIdx(updated.length - 1);
-    setNewReview({ name: '', role: '', comment: '', rating: 5 });
-    setReviewMsg('Your review has been published!');
-    setTimeout(() => setReviewMsg(''), 4000);
+    if (!user) {
+      setReviewMsg('Please log in to submit a review.');
+      return;
+    }
+
+    setReviewLoading(true);
+    try {
+      const response = await reviewAPI.createReview({
+        farmHouseId: Number(newReview.farmHouseId),
+        rating: newReview.rating,
+        comment: newReview.comment,
+      }, user.id);
+
+      if (response.data.success) {
+        const savedReview = response.data.review;
+        const added = {
+          id: savedReview.id,
+          name: savedReview.userName,
+          role: savedReview.userRole,
+          comment: savedReview.comment,
+          rating: savedReview.rating,
+          avatar: '⭐',
+        };
+        const updated = [...testimonials, added];
+        setTestimonials(updated);
+        setActiveReviewIdx(updated.length - 1);
+        setNewReview({ farmHouseId: '', comment: '', rating: 5 });
+        setReviewMsg('Your review has been published!');
+      } else {
+        setReviewMsg(response.data.message || 'Failed to add review.');
+      }
+    } catch (err) {
+      setReviewMsg(err.response?.data?.message || 'Failed to add review.');
+    } finally {
+      setReviewLoading(false);
+      setTimeout(() => setReviewMsg(''), 4000);
+    }
   };
 
   // Fallback data for when backend is offline
@@ -458,10 +488,12 @@ function Home({ user }) {
             <p>Your review helps other travelers find their perfect farmhouse</p>
             {reviewMsg && <div className="review-success-msg">{reviewMsg}</div>}
             <form onSubmit={handleAddReview}>
-              <div className="rf-row">
-                <input type="text" placeholder="Your Name" value={newReview.name} onChange={(e) => setNewReview({ ...newReview, name: e.target.value })} required />
-                <input type="text" placeholder="Your Role (e.g. Vacationer)" value={newReview.role} onChange={(e) => setNewReview({ ...newReview, role: e.target.value })} />
-              </div>
+              <select value={newReview.farmHouseId} onChange={(e) => setNewReview({ ...newReview, farmHouseId: e.target.value })} required disabled={!user || loading}>
+                <option value="">Select the farmhouse you stayed at</option>
+                {farmhouses.map((farmhouse) => (
+                  <option key={farmhouse.id} value={farmhouse.id}>{farmhouse.name}</option>
+                ))}
+              </select>
               <textarea placeholder="Describe your experience..." rows="4" value={newReview.comment} onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })} required></textarea>
               <div className="rf-footer">
                 <div className="rf-rating">
@@ -470,7 +502,9 @@ function Home({ user }) {
                     {[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>)}
                   </select>
                 </div>
-                <button type="submit" className="rf-submit-btn">Publish Review →</button>
+                <button type="submit" className="rf-submit-btn" disabled={reviewLoading || !user}>
+                  {reviewLoading ? 'Publishing...' : user ? 'Publish Review →' : 'Log in to Review'}
+                </button>
               </div>
             </form>
           </div>
