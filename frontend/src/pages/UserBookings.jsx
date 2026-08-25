@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { bookingAPI } from '../api/axiosInstance';
+import './UserBookings.css';
+
+const statusLabels = { ALL: 'All stays', PENDING: 'Pending', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', CANCELLED: 'Cancelled' };
+
+const formatDate = (date) => date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set';
+const statusClass = (status) => `ub-status ub-status-${(status || 'pending').toLowerCase()}`;
 
 function UserBookings({ user }) {
   const location = useLocation();
@@ -8,6 +14,10 @@ function UserBookings({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [activeFilter, setActiveFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchUserBookings();
@@ -20,7 +30,9 @@ function UserBookings({ user }) {
   }, [location.state]);
 
   const fetchUserBookings = async () => {
+    if (!user?.id) { setLoading(false); setError('Please sign in to view your bookings.'); return; }
     try {
+      setError('');
       const response = await bookingAPI.getUserBookings(user.id);
       if (response.data.success) {
         setBookings(response.data.bookings);
@@ -32,12 +44,19 @@ function UserBookings({ user }) {
     }
   };
 
+  const refreshBookings = async () => {
+    setRefreshing(true);
+    await fetchUserBookings();
+    setRefreshing(false);
+  };
+
   const handleCancelBooking = async (bookingId) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
         const response = await bookingAPI.cancelBooking(bookingId);
         if (response.data.success) {
-          alert('Booking cancelled successfully');
+          setSuccessMessage('Booking cancelled successfully.');
+          setSelectedBooking(null);
           fetchUserBookings();
         }
       } catch (err) {
@@ -46,72 +65,77 @@ function UserBookings({ user }) {
     }
   };
 
+  const visibleBookings = bookings.filter((booking) => {
+    const matchesStatus = activeFilter === 'ALL' || booking.status === activeFilter;
+    const query = searchTerm.toLowerCase();
+    const matchesSearch = !query || booking.farmHouseName?.toLowerCase().includes(query) || String(booking.id).includes(query);
+    return matchesStatus && matchesSearch;
+  });
+
+  const bookingCount = (status) => bookings.filter((booking) => booking.status === status).length;
+  const totalSpent = bookings.filter((booking) => booking.status !== 'CANCELLED').reduce((sum, booking) => sum + (booking.totalPrice || 0), 0);
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
 
   return (
     <div className="user-bookings-container">
-      <h1>My Bookings</h1>
+      <div className="ub-hero">
+        <div>
+          <p className="ub-eyebrow">YOUR GETAWAYS</p>
+          <h1>My Bookings</h1>
+          <p className="ub-intro">Keep every countryside escape in one calm, convenient place.</p>
+        </div>
+        <button className="ub-refresh-btn" onClick={refreshBookings} disabled={refreshing}>{refreshing ? 'Refreshing...' : '↻ Refresh'}</button>
+      </div>
 
       {successMessage && (
-        <div className="success-message" style={{ marginBottom: '16px', padding: '12px', background: '#e8f5e9', color: '#2e7d32', borderRadius: '8px' }}>
+        <div className="ub-alert ub-success">
           {successMessage}
         </div>
       )}
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="ub-alert ub-error">{error}</div>}
 
       {bookings.length > 0 ? (
-        <div className="bookings-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Booking ID</th>
-                <th>Farm House</th>
-                <th>Check-in</th>
-                <th>Check-out</th>
-                <th>Guests</th>
-                <th>Total Price</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking) => (
-                <tr key={booking.id}>
-                  <td>#{booking.id}</td>
-                  <td>{booking.farmHouseName}</td>
-                  <td>{booking.startDate}</td>
-                  <td>{booking.endDate}</td>
-                  <td>{booking.numberOfGuests}</td>
-                  <td>₹{booking.totalPrice}</td>
-                  <td>
-                    <span className={`status-badge status-${booking.status.toLowerCase()}`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td>
-                    {booking.status === 'PENDING' && (
-                      <button 
-                        onClick={() => handleCancelBooking(booking.id)}
-                        className="cancel-btn"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="ub-stats">
+            <div><span>Total stays</span><strong>{bookings.length}</strong><small>All your reservations</small></div>
+            <div><span>Upcoming</span><strong>{bookingCount('CONFIRMED') + bookingCount('PENDING')}</strong><small>Ready for your plans</small></div>
+            <div><span>Completed</span><strong>{bookingCount('COMPLETED')}</strong><small>Memories made</small></div>
+            <div><span>Total booked</span><strong>₹{totalSpent.toLocaleString('en-IN')}</strong><small>Cancelled stays excluded</small></div>
+          </div>
+          <div className="ub-controls">
+            <div className="ub-tabs">
+              {Object.entries(statusLabels).map(([status, label]) => <button key={status} className={activeFilter === status ? 'active' : ''} onClick={() => setActiveFilter(status)}>{label}{status !== 'ALL' && <span>{bookingCount(status)}</span>}</button>)}
+            </div>
+            <input className="ub-search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search your stays..." aria-label="Search bookings" />
+          </div>
+          <div className="ub-booking-list">
+            {visibleBookings.map((booking) => (
+              <article className="ub-booking-card" key={booking.id}>
+                <div className="ub-card-accent" />
+                <div className="ub-card-main">
+                  <div className="ub-card-top"><span className="ub-booking-id">BOOKING #{booking.id}</span><span className={statusClass(booking.status)}>{booking.status}</span></div>
+                  <h2>{booking.farmHouseName || 'Farm house stay'}</h2>
+                  <div className="ub-stay-dates"><div><small>CHECK-IN</small><strong>{formatDate(booking.startDate)}</strong></div><span className="ub-arrow">→</span><div><small>CHECK-OUT</small><strong>{formatDate(booking.endDate)}</strong></div></div>
+                  <div className="ub-card-meta"><span>◉ {booking.numberOfGuests || 0} guests</span><strong>₹{booking.totalPrice?.toLocaleString('en-IN')}</strong></div>
+                </div>
+                <div className="ub-card-actions"><button className="ub-view-btn" onClick={() => setSelectedBooking(booking)}>View details</button>{booking.status === 'PENDING' && <button className="ub-cancel-btn" onClick={() => handleCancelBooking(booking.id)}>Cancel stay</button>}</div>
+              </article>
+            ))}
+          </div>
+          {visibleBookings.length === 0 && <div className="ub-filter-empty"><strong>No matching stays</strong><span>Try another search or status filter.</span></div>}
+        </>
       ) : (
         <div className="no-bookings">
           <p>You don't have any bookings yet.</p>
           <a href="/farmhouses" className="btn btn-primary">Browse Farm Houses</a>
         </div>
       )}
+
+      {selectedBooking && <div className="ub-modal-backdrop" onClick={() => setSelectedBooking(null)}><div className="ub-modal" onClick={(event) => event.stopPropagation()}><button className="ub-modal-close" onClick={() => setSelectedBooking(null)}>×</button><p className="ub-eyebrow">BOOKING #{selectedBooking.id}</p><h2>{selectedBooking.farmHouseName || 'Farm house stay'}</h2><span className={statusClass(selectedBooking.status)}>{selectedBooking.status}</span><div className="ub-modal-grid"><div><small>Check-in</small><strong>{formatDate(selectedBooking.startDate)}</strong></div><div><small>Check-out</small><strong>{formatDate(selectedBooking.endDate)}</strong></div><div><small>Guests</small><strong>{selectedBooking.numberOfGuests || 'Not set'}</strong></div><div><small>Total price</small><strong>₹{selectedBooking.totalPrice?.toLocaleString('en-IN')}</strong></div></div>{selectedBooking.specialRequirements && <div className="ub-requirements"><small>Special requirements</small><p>{selectedBooking.specialRequirements}</p></div>}{selectedBooking.status === 'PENDING' && <button className="ub-modal-cancel" onClick={() => handleCancelBooking(selectedBooking.id)}>Cancel this booking</button>}</div></div>}
     </div>
   );
 }

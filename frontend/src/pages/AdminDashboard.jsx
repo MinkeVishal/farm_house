@@ -145,7 +145,9 @@ function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [formData, setFormData] = useState({ name: '', location: '', description: '', pricePerDay: '', maxGuests: '', amenities: '', imageUrl: '' });
   const [formLoading, setFormLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
@@ -234,6 +236,18 @@ function AdminDashboard() {
     }
   };
 
+  const handleBookingStatus = async (booking, action) => {
+    try {
+      if (action === 'confirm') await bookingAPI.confirmBooking(booking.id);
+      else await bookingAPI.cancelBooking(booking.id);
+      addToast(`Booking #${booking.id} ${action === 'confirm' ? 'confirmed' : 'cancelled'}`);
+      fetchData();
+      setShowBookingModal(false);
+    } catch (err) {
+      addToast(err.response?.data?.message || `Failed to ${action} booking`, 'error');
+    }
+  };
+
   // ── Delete Farmhouse ──
   const handleDelete = (id) => {
     setConfirmDialog({
@@ -269,9 +283,19 @@ function AdminDashboard() {
 
   const filteredBookings = bookings.filter(b =>
     (b.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     b.farmHouseName?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+     b.farmHouseName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     String(b.id).includes(searchTerm) ||
+     b.startDate?.includes(searchTerm) ||
+     b.endDate?.includes(searchTerm)) &&
     (filterStatus === 'all' || b.status?.toLowerCase() === filterStatus)
   );
+
+  const bookingStats = {
+    total: bookings.length,
+    pending: bookings.filter(b => b.status === 'PENDING').length,
+    confirmed: bookings.filter(b => b.status === 'CONFIRMED').length,
+    revenue: bookings.filter(b => b.status !== 'CANCELLED').reduce((sum, b) => sum + (b.totalPrice || 0), 0),
+  };
 
   // ── Sidebar nav items ──
   const navItems = [
@@ -604,12 +628,18 @@ function AdminDashboard() {
           {/* ═══ BOOKINGS TAB ═══ */}
           {activeTab === 'bookings' && (
             <div className="adm-section">
+              <div className="adm-booking-summary">
+                <div className="adm-booking-kpi"><span className="adm-kpi-label">All bookings</span><strong>{bookingStats.total}</strong><small>Across every guest</small></div>
+                <div className="adm-booking-kpi"><span className="adm-kpi-label">Needs attention</span><strong className="adm-kpi-warning">{bookingStats.pending}</strong><small>Pending confirmation</small></div>
+                <div className="adm-booking-kpi"><span className="adm-kpi-label">Confirmed stays</span><strong className="adm-kpi-success">{bookingStats.confirmed}</strong><small>Upcoming and active</small></div>
+                <div className="adm-booking-kpi"><span className="adm-kpi-label">Booked revenue</span><strong>₹{bookingStats.revenue.toLocaleString('en-IN')}</strong><small>Excludes cancelled stays</small></div>
+              </div>
               <div className="adm-toolbar">
                 <div className="adm-search-wrap">
                   <Icon d={icons.search} size={16} />
                   <input
                     className="adm-search"
-                    placeholder="Search bookings..."
+                    placeholder="Search guest, property, date or ID..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
@@ -637,6 +667,7 @@ function AdminDashboard() {
                       <th>Check-out</th>
                       <th>Total</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -669,6 +700,23 @@ function AdminDashboard() {
                           <span className={`adm-badge adm-status-${(b.status || '').toLowerCase()}`}>
                             {b.status}
                           </span>
+                        </td>
+                        <td>
+                          <div className="adm-action-btns">
+                            <button className="adm-btn-sm adm-btn-view" title="View booking details" onClick={() => { setSelectedBooking(b); setShowBookingModal(true); }}>
+                              <Icon d={icons.eye} size={14} /> View
+                            </button>
+                            {b.status === 'PENDING' && (
+                              <button className="adm-btn-sm adm-btn-approve" onClick={() => handleBookingStatus(b, 'confirm')}>
+                                <Icon d={icons.approve} size={14} /> Confirm
+                              </button>
+                            )}
+                            {b.status !== 'CANCELLED' && b.status !== 'COMPLETED' && (
+                              <button className="adm-btn-sm adm-btn-danger" onClick={() => handleBookingStatus(b, 'cancel')}>
+                                <Icon d={icons.close} size={14} /> Cancel
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -826,6 +874,27 @@ function AdminDashboard() {
                 <Icon d={icons.delete} size={16} /> Delete
               </button>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={showBookingModal} onClose={() => setShowBookingModal(false)} title={`Booking #${selectedBooking?.id || ''}`}>
+        {selectedBooking && (
+          <div className="adm-detail-view adm-booking-detail">
+            <div className="adm-booking-detail-heading">
+              <div className="adm-avatar" style={{ background: 'linear-gradient(135deg,#f093fb,#f5576c)' }}>{selectedBooking.userName?.[0] || 'U'}</div>
+              <div><h3>{selectedBooking.userName || 'Unknown guest'}</h3><p>{selectedBooking.farmHouseName || selectedBooking.farmhouseName || 'Unknown farmhouse'}</p></div>
+              <span className={`adm-badge adm-status-${(selectedBooking.status || '').toLowerCase()}`}>{selectedBooking.status}</span>
+            </div>
+            <div className="adm-detail-grid">
+              <div><label>Check-in</label><p>{selectedBooking.startDate}</p></div>
+              <div><label>Check-out</label><p>{selectedBooking.endDate}</p></div>
+              <div><label>Guests</label><p>{selectedBooking.numberOfGuests || '—'}</p></div>
+              <div><label>Total amount</label><p>₹{selectedBooking.totalPrice?.toLocaleString('en-IN')}</p></div>
+              {selectedBooking.specialRequirements && <div className="adm-detail-full"><label>Special requirements</label><p>{selectedBooking.specialRequirements}</p></div>}
+            </div>
+            {selectedBooking.status === 'PENDING' && <button className="adm-btn adm-btn-primary" onClick={() => handleBookingStatus(selectedBooking, 'confirm')}><Icon d={icons.approve} size={16} /> Confirm booking</button>}
+            {selectedBooking.status !== 'CANCELLED' && selectedBooking.status !== 'COMPLETED' && <button className="adm-btn adm-btn-danger adm-booking-cancel" onClick={() => handleBookingStatus(selectedBooking, 'cancel')}><Icon d={icons.close} size={16} /> Cancel booking</button>}
           </div>
         )}
       </Modal>
