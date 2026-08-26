@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { farmhouseAPI } from '../api/axiosInstance';
 
+const readImageFile = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
 function CreateEstate({ user }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -14,10 +21,13 @@ function CreateEstate({ user }) {
     bathrooms: '',
     amenities: 'WiFi,Pool,Garden',
     imageUrl: '',
+    imageUrls: '',
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [galleryUrls, setGalleryUrls] = useState(['']);
+  const [galleryFiles, setGalleryFiles] = useState([]);
 
   const handleChange = (e) => {
     setFormData({
@@ -33,6 +43,7 @@ function CreateEstate({ user }) {
     setMessage('');
 
     try {
+      const uploadedImages = await Promise.all(galleryFiles.map(readImageFile));
       const amenitiesArray = formData.amenities
         .split(',')
         .map((item) => item.trim())
@@ -46,6 +57,10 @@ function CreateEstate({ user }) {
           bedrooms: parseInt(formData.bedrooms, 10),
           bathrooms: parseInt(formData.bathrooms, 10),
           amenities: JSON.stringify(amenitiesArray),
+          imageUrls: JSON.stringify([
+            ...galleryUrls.map((url) => url.trim()).filter(Boolean),
+            ...uploadedImages,
+          ]),
         },
         user?.id
       );
@@ -62,7 +77,10 @@ function CreateEstate({ user }) {
           bathrooms: '',
           amenities: 'WiFi,Pool,Garden',
           imageUrl: '',
+          imageUrls: '',
         });
+        setGalleryUrls(['']);
+        setGalleryFiles([]);
         setTimeout(() => navigate('/owner-dashboard'), 1200);
       } else {
         setError('Failed to create estate.');
@@ -142,6 +160,42 @@ function CreateEstate({ user }) {
           <div className="form-group">
             <label>Image URL</label>
             <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleChange} />
+          </div>
+          <div className="form-group">
+            <label>Gallery Photos</label>
+            {galleryUrls.map((url, index) => (
+              <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setGalleryUrls((items) => items.map((item, i) => i === index ? e.target.value : item))}
+                  placeholder={`Photo ${index + 1} URL (https://...)`}
+                />
+                {galleryUrls.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setGalleryUrls((items) => items.filter((_, i) => i !== index))}
+                    aria-label={`Remove photo ${index + 1}`}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={() => setGalleryUrls((items) => [...items, ''])}>
+              + Add another photo
+            </button>
+            <label style={{ marginLeft: '8px', cursor: 'pointer' }}>
+              Choose photos
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => setGalleryFiles((items) => [...items, ...Array.from(e.target.files || [])])}
+              />
+            </label>
+            {galleryFiles.length > 0 && <small>{galleryFiles.map((file) => file.name).join(', ')}</small>}
           </div>
 
           <button type="submit" className="submit-btn" disabled={loading}>

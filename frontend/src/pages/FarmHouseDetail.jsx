@@ -356,11 +356,29 @@ function FarmHouseDetail({ user }) {
           </div>
           <h1>{farmhouse.name}</h1>
           <p className="fd-location">📍 {farmhouse.location}</p>
+          <button
+            className="fd-gallery-jump"
+            onClick={() => document.getElementById("fd-gallery")?.scrollIntoView({ behavior: "smooth" })}
+          >
+            View Gallery ({galleryImages.length})
+          </button>
         </div>
       </div>
 
-      {/* ── THUMBNAIL STRIP ── */}
-      {galleryImages.length > 1 && (
+      {/* ── GALLERY ── */}
+      <section id="fd-gallery" className="fd-gallery" aria-label="Farmhouse photo gallery">
+        <div className="fd-gallery-heading">
+          <h2>Gallery</h2>
+          <span>{galleryImages.length} {galleryImages.length === 1 ? "photo" : "photos"}</span>
+          {user?.role === "OWNER" && user.id === farmhouse.ownerId && (
+            <button
+              className="fd-gallery-add"
+              onClick={() => navigate("/owner-dashboard", { state: { openGalleryFor: farmhouse.id } })}
+            >
+              + Add more photos
+            </button>
+          )}
+        </div>
         <div className="fd-thumbs">
           {galleryImages.map((img, i) => (
             <button
@@ -372,7 +390,7 @@ function FarmHouseDetail({ user }) {
             </button>
           ))}
         </div>
-      )}
+      </section>
 
       {/* ── QUICK STATS RIBBON ── */}
       <div className="fd-stats-ribbon">

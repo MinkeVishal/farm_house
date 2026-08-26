@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { farmhouseAPI, bookingAPI } from '../api/axiosInstance';
 import './OwnerDashboard.css';
 
@@ -63,6 +64,37 @@ function ToastContainer({ toasts }) {
   );
 }
 
+function formatGalleryUrls(value) {
+  if (!value) return '';
+  if (Array.isArray(value)) return value.join('\n');
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.join('\n') : String(parsed);
+  } catch {
+    return value;
+  }
+}
+
+function readImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function normalizeGalleryValue(value) {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value || '[]');
+    if (Array.isArray(parsed)) return parsed;
+  } catch {
+    // Keep compatibility with older line-separated values.
+  }
+  return String(value || '').split('\n').map(url => url.trim()).filter(Boolean);
+}
+
 // ─── Confirm Dialog ───────────────────────────────────────────────────────────
 function ConfirmDialog({ title, message, onConfirm, onCancel }) {
   return (
@@ -108,9 +140,16 @@ function FarmHouseFormModal({ initial, onClose, onSubmit, isEdit = false }) {
     name: '', location: '', description: '',
     pricePerDay: '', maxGuests: '', bedrooms: '',
     bathrooms: '', imageUrl: '',
+    imageUrls: '',
     amenities: '["WiFi","Pool","Garden","Parking"]',
     ...initial,
+    imageUrls: formatGalleryUrls(initial?.imageUrls),
   });
+  const [galleryUrls, setGalleryUrls] = useState(() => {
+    const urls = formatGalleryUrls(initial?.imageUrls).split('\n').filter(Boolean);
+    return urls.length ? urls : [''];
+  });
+  const [galleryFiles, setGalleryFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handle = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -118,8 +157,13 @@ function FarmHouseFormModal({ initial, onClose, onSubmit, isEdit = false }) {
   const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
+    const uploadedImages = await Promise.all(galleryFiles.map(readImageFile));
     await onSubmit({
       ...form,
+      imageUrls: JSON.stringify([
+        ...galleryUrls.map(url => url.trim()).filter(Boolean),
+        ...uploadedImages,
+      ]),
       pricePerDay: parseFloat(form.pricePerDay),
       maxGuests: parseInt(form.maxGuests, 10),
       bedrooms: parseInt(form.bedrooms, 10),
@@ -183,6 +227,57 @@ function FarmHouseFormModal({ initial, onClose, onSubmit, isEdit = false }) {
                   placeholder="https://..." className="od-form-input" />
               </div>
               <div className="od-form-group od-form-full">
+                <label className="od-form-label">Gallery Photos</label>
+                <div>
+                  {galleryUrls.map((url, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="url"
+                        value={url}
+                        onChange={e => setGalleryUrls(p => p.map((item, i) => i === index ? e.target.value : item))}
+                        placeholder={`Photo ${index + 1} URL (https://...)`}
+                        className="od-form-input"
+                      />
+                      {galleryUrls.length > 1 && (
+                        <button
+                          type="button"
+                          className="od-btn od-btn-secondary"
+                          onClick={() => setGalleryUrls(p => p.filter((_, i) => i !== index))}
+                          aria-label={`Remove photo ${index + 1}`}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="od-btn od-btn-secondary"
+                    onClick={() => setGalleryUrls(p => [...p, ''])}
+                  >
+                    + Add another photo
+                  </button>
+                  <label className="od-btn od-btn-secondary" style={{ display: 'inline-flex', marginLeft: '0.5rem', cursor: 'pointer' }}>
+                    Choose photos
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      hidden
+                      onChange={e => setGalleryFiles(p => [...p, ...Array.from(e.target.files || [])])}
+                    />
+                  </label>
+                  {galleryFiles.length > 0 && (
+                    <div style={{ marginTop: '0.55rem', color: 'var(--od-muted)', fontSize: '0.75rem' }}>
+                      {galleryFiles.map(file => file.name).join(', ')}
+                    </div>
+                  )}
+                </div>
+                <small style={{ color: 'var(--od-muted)', fontSize: '0.72rem', marginTop: '0.3rem' }}>
+                  Add multiple photo URLs. Visitors can browse them on the property details page.
+                </small>
+              </div>
+              <div className="od-form-group od-form-full">
                 <label className="od-form-label">Amenities (JSON Array)</label>
                 <input name="amenities" value={form.amenities} onChange={handle}
                   placeholder='["WiFi","Pool","Garden"]' className="od-form-input" />
@@ -238,6 +333,8 @@ function StatusBadge({ status }) {
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════════
 function OwnerDashboard({ user }) {
+  const location = useLocation();
+  const routerNavigate = useNavigate();
   const [activeSection, setActiveSection] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -281,10 +378,25 @@ function OwnerDashboard({ user }) {
 
   useEffect(() => { fetchOwnerData(); }, [fetchOwnerData]);
 
+  useEffect(() => {
+    const farmhouseId = location.state?.openGalleryFor;
+    if (!farmhouseId || !farmhouses.length) return;
+    const farmhouse = farmhouses.find(fh => fh.id === farmhouseId);
+    if (farmhouse) {
+      setActiveSection('farmhouses');
+      setEditingFH(farmhouse);
+      routerNavigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [farmhouses, location.pathname, location.state, routerNavigate]);
+
   // ── Add Farm House ──
   const handleAddFH = async (formData) => {
     try {
-      const res = await farmhouseAPI.addFarmHouse(formData, user.id);
+      const payload = {
+        ...formData,
+        imageUrls: JSON.stringify(normalizeGalleryValue(formData.imageUrls)),
+      };
+      const res = await farmhouseAPI.addFarmHouse(payload, user.id);
       if (res.data.success) {
         addToast('Farm house added! Waiting for approval.', 'success');
         setShowAddForm(false);
@@ -296,7 +408,11 @@ function OwnerDashboard({ user }) {
   // ── Update Farm House ──
   const handleUpdateFH = async (formData) => {
     try {
-      const res = await farmhouseAPI.updateFarmHouse(editingFH.id, formData, user.id);
+      const payload = {
+        ...formData,
+        imageUrls: JSON.stringify(normalizeGalleryValue(formData.imageUrls)),
+      };
+      const res = await farmhouseAPI.updateFarmHouse(editingFH.id, payload, user.id);
       if (res.data.success) {
         addToast('Farm house updated!', 'success');
         setEditingFH(null);
@@ -649,6 +765,10 @@ function OwnerDashboard({ user }) {
                               ₹{fh.pricePerDay?.toLocaleString()} <span>/ night</span>
                             </div>
                             <div className="od-fh-footer">
+                              <button className="od-btn od-btn-secondary od-btn-sm"
+                                onClick={() => setEditingFH(fh)}>
+                                <Ico d={ICONS.farmhouse} size={13} /> Manage Gallery
+                              </button>
                               <button className="od-btn od-btn-secondary od-btn-sm"
                                 onClick={() => setEditingFH(fh)}>
                                 <Ico d={ICONS.edit} size={13} /> Edit
