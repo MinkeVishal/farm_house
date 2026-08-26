@@ -47,6 +47,7 @@ public class FarmHouseService {
         farmHouse.setBathrooms(dto.getBathrooms());
         farmHouse.setAmenities(dto.getAmenities());
         farmHouse.setImageUrl(dto.getImageUrl());
+        farmHouse.setImageUrls(dto.getImageUrls());
         farmHouse.setAvailable(true);
         farmHouse.setIsApproved(false);
         
@@ -144,6 +145,7 @@ public class FarmHouseService {
         if (dto.getBathrooms() != null) farmHouse.setBathrooms(dto.getBathrooms());
         if (dto.getAmenities() != null) farmHouse.setAmenities(dto.getAmenities());
         if (dto.getImageUrl() != null) farmHouse.setImageUrl(dto.getImageUrl());
+        if (dto.getImageUrls() != null) farmHouse.setImageUrls(dto.getImageUrls());
 
         FarmHouse updatedFarmHouse = farmHouseRepository.save(farmHouse);
         return convertToDTO(updatedFarmHouse);
@@ -211,6 +213,7 @@ public class FarmHouseService {
         dto.setBathrooms(farmHouse.getBathrooms());
         dto.setAmenities(farmHouse.getAmenities());
         dto.setImageUrl(farmHouse.getImageUrl());
+        dto.setImageUrls(farmHouse.getImageUrls());
         return dto;
     }
 }

@@ -22,4 +22,5 @@ public class FarmHouseDTO {
     private Integer bathrooms;
     private String amenities;
     private String imageUrl;
+    private String imageUrls;
 }

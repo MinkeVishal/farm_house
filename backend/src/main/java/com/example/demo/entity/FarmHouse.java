@@ -46,6 +46,9 @@ public class FarmHouse {
     private String amenities; // JSON format: ["WiFi", "Pool", "Garden", "Party Hall"]
     
     private String imageUrl;
+
+    @Column(name = "image_urls", columnDefinition = "LONGTEXT")
+    private String imageUrls; // JSON format: ["https://...", "https://..."]
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
