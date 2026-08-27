@@ -115,6 +115,11 @@ function FarmHouseDetail({ user }) {
   const [farmhouse, setFarmhouse] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(defaultImage);
+  const [hoveredGalleryImage, setHoveredGalleryImage] = useState(null);
+  const [isGalleryStoryOpen, setIsGalleryStoryOpen] = useState(false);
+  const [storyImageIndex, setStoryImageIndex] = useState(0);
+  const [storyZoom, setStoryZoom] = useState(1);
+  const [isPreviewImageHovered, setIsPreviewImageHovered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("about");
@@ -141,6 +146,30 @@ function FarmHouseDetail({ user }) {
     fetchFarmhouseDetails();
     fetchReviews();
   }, [id]);
+
+  useEffect(() => {
+    if (!isGalleryStoryOpen) return undefined;
+    setStoryZoom(1.2);
+    const timer = setTimeout(() => setStoryZoom(1), 900);
+    return () => clearTimeout(timer);
+  }, [isGalleryStoryOpen, storyImageIndex]);
+
+  useEffect(() => {
+    if (!isGalleryStoryOpen) return undefined;
+    const handlePreviewKeys = (event) => {
+      if (event.key === "Escape") setIsGalleryStoryOpen(false);
+      if (galleryImages.length > 1 && event.key === "ArrowLeft") {
+        setStoryImageIndex(index => (index - 1 + galleryImages.length) % galleryImages.length);
+        setStoryZoom(1);
+      }
+      if (galleryImages.length > 1 && event.key === "ArrowRight") {
+        setStoryImageIndex(index => (index + 1) % galleryImages.length);
+        setStoryZoom(1);
+      }
+    };
+    window.addEventListener("keydown", handlePreviewKeys);
+    return () => window.removeEventListener("keydown", handlePreviewKeys);
+  }, [galleryImages.length, isGalleryStoryOpen]);
 
   const fetchReviews = async () => {
     try {
@@ -290,6 +319,10 @@ function FarmHouseDetail({ user }) {
       ? "Book Now →"
       : "Login to Book →";
 
+  // IDs can arrive as strings or numbers depending on the login source.
+  const canAddGalleryPhotos =
+    user?.role === "OWNER" && String(user.id) === String(farmhouse.ownerId);
+
   const handleBookClick = (e) => {
     if (!user) {
       e.preventDefault();
@@ -370,12 +403,12 @@ function FarmHouseDetail({ user }) {
         <div className="fd-gallery-heading">
           <h2>Gallery</h2>
           <span>{galleryImages.length} {galleryImages.length === 1 ? "photo" : "photos"}</span>
-          {user?.role === "OWNER" && user.id === farmhouse.ownerId && (
+          {canAddGalleryPhotos && (
             <button
               className="fd-gallery-add"
               onClick={() => navigate("/owner-dashboard", { state: { openGalleryFor: farmhouse.id } })}
             >
-              + Add more photos
+              + Add Photos to Gallery
             </button>
           )}
         </div>
@@ -384,15 +417,80 @@ function FarmHouseDetail({ user }) {
             <button
               key={`${img}-${i}`}
               className={`fd-thumb ${selectedImage === img ? "active" : ""}`}
-              onClick={() => setSelectedImage(img)}
+              onClick={() => {
+                setStoryImageIndex(i);
+                setStoryZoom(1);
+                setIsGalleryStoryOpen(true);
+              }}
+              onMouseEnter={() => setHoveredGalleryImage(i)}
+              onMouseLeave={() => setHoveredGalleryImage(null)}
+              style={{
+                overflow: "hidden",
+                transform: hoveredGalleryImage === i ? "translateY(-6px)" : "translateY(0)",
+                boxShadow: hoveredGalleryImage === i ? "0 12px 24px rgba(124, 110, 247, 0.45)" : "none",
+                transition: "transform 220ms ease, box-shadow 220ms ease",
+              }}
             >
-              <img src={img} alt={`View ${i + 1}`} />
+              <img
+                src={img}
+                alt={`View ${i + 1}`}
+                style={{
+                  transform: hoveredGalleryImage === i ? "scale(1.18)" : "scale(1)",
+                  filter: hoveredGalleryImage === i ? "brightness(1.1) saturate(1.12)" : "none",
+                  transition: "transform 220ms ease-in-out, filter 220ms ease-in-out",
+                }}
+              />
             </button>
           ))}
         </div>
       </section>
 
       {/* ── QUICK STATS RIBBON ── */}
+      {isGalleryStoryOpen && galleryImages.length > 0 && (
+        <div role="dialog" aria-modal="true" aria-label="Photo preview" onClick={() => setIsGalleryStoryOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(7, 12, 20, 0.92)", display: "grid", placeItems: "center", padding: "1.25rem" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "min(100%, 1000px)", color: "white", textAlign: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.8rem" }}>
+              <strong>Photo Preview · Gallery Photo {storyImageIndex + 1}</strong>
+              <button className="fd-gallery-add" onClick={() => setIsGalleryStoryOpen(false)}>Close</button>
+            </div>
+            <p style={{ margin: "0 0 0.85rem", color: "rgba(255,255,255,0.72)", fontSize: "0.85rem" }}>
+              Explore the gallery with the photo strip, Previous/Next buttons, or your keyboard arrow keys.
+            </p>
+            <div style={{ height: "min(68vh, 650px)", overflow: "hidden", borderRadius: "16px", background: "#111827", display: "grid", placeItems: "center" }}>
+              <img src={galleryImages[storyImageIndex]} alt={`${farmhouse.name} gallery photo ${storyImageIndex + 1}`}
+                onMouseEnter={() => setIsPreviewImageHovered(true)}
+                onMouseLeave={() => setIsPreviewImageHovered(false)}
+                style={{
+                  maxWidth: "100%", maxHeight: "100%", objectFit: "contain", cursor: "zoom-in",
+                  transform: `scale(${isPreviewImageHovered ? storyZoom + 0.08 : storyZoom})`,
+                  filter: isPreviewImageHovered ? "brightness(1.1) saturate(1.12)" : "none",
+                  transition: "transform 280ms ease, filter 280ms ease",
+                }} />
+            </div>
+            {galleryImages.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: "0.6rem", marginTop: "0.9rem" }}>
+                <button className="fd-gallery-add" onClick={() => { setStoryImageIndex(index => (index - 1 + galleryImages.length) % galleryImages.length); setStoryZoom(1); }}>
+                  Previous
+                </button>
+                <button className="fd-gallery-add" onClick={() => { setStoryImageIndex(index => (index + 1) % galleryImages.length); setStoryZoom(1); }}>
+                  Next
+                </button>
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginTop: "1rem", overflowX: "auto", padding: "0.2rem" }}>
+              {galleryImages.map((image, index) => (
+                <button key={`${image}-${index}`} onClick={() => { setStoryImageIndex(index); setStoryZoom(1); }}
+                  aria-label={`Show gallery photo ${index + 1}`}
+                  style={{ width: "58px", height: "42px", flex: "0 0 auto", padding: 0, overflow: "hidden", borderRadius: "7px", cursor: "pointer", border: storyImageIndex === index ? "2px solid #a78bfa" : "2px solid transparent", opacity: storyImageIndex === index ? 1 : 0.58 }}>
+                  <img src={image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="fd-stats-ribbon">
         <div className="fd-stat">
           <span className="fd-stat-icon">🛏️</span>

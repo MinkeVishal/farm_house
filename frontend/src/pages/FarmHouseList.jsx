@@ -118,8 +118,8 @@ function FarmHouseList({ user }) {
   };
 
   const getImageUrl = (fh) => {
-    if (fh.imageUrls && Array.isArray(fh.imageUrls) && fh.imageUrls.length > 0) return fh.imageUrls[0];
     if (fh.imageUrl) return fh.imageUrl;
+    if (fh.imageUrls && Array.isArray(fh.imageUrls) && fh.imageUrls.length > 0) return fh.imageUrls[0];
     return 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&auto=format&fit=crop';
   };
 

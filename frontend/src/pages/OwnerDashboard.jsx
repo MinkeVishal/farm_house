@@ -299,6 +299,81 @@ function FarmHouseFormModal({ initial, onClose, onSubmit, isEdit = false }) {
   );
 }
 
+// This modal deliberately submits only imageUrls. It is used by the public
+// gallery's "Add more photos" action, so the property's cover image cannot be
+// changed while adding gallery photos.
+function GalleryPhotoModal({ initial, onClose, onSubmit }) {
+  const existingGalleryUrls = normalizeGalleryValue(initial?.imageUrls);
+  const [newGalleryUrls, setNewGalleryUrls] = useState(['']);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const uploadedImages = await Promise.all(galleryFiles.map(readImageFile));
+      await onSubmit({
+        imageUrls: JSON.stringify([
+          ...existingGalleryUrls,
+          ...newGalleryUrls.map(url => url.trim()).filter(Boolean),
+          ...uploadedImages,
+        ]),
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="od-form-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="od-form-modal">
+        <div className="od-form-header">
+          <h2><Ico d={ICONS.farmhouse} size={20} stroke="#7c6ef7" /> Add Gallery Photos</h2>
+          <button className="od-form-close" onClick={onClose}>×</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="od-form-body">
+            <div className="od-form-group od-form-full">
+              <label className="od-form-label">Gallery Photos</label>
+              <small style={{ display: 'block', color: 'var(--od-muted)', fontSize: '0.72rem', marginBottom: '0.65rem' }}>
+                {existingGalleryUrls.length} existing {existingGalleryUrls.length === 1 ? 'photo' : 'photos'} will remain in the gallery.
+              </small>
+              {newGalleryUrls.map((url, index) => (
+                <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <input type="url" value={url}
+                    onChange={e => setNewGalleryUrls(p => p.map((item, i) => i === index ? e.target.value : item))}
+                    placeholder={`New photo ${index + 1} URL (https://...)`} className="od-form-input" />
+                  {newGalleryUrls.length > 1 && (
+                    <button type="button" className="od-btn od-btn-secondary"
+                      onClick={() => setNewGalleryUrls(p => p.filter((_, i) => i !== index))}>×</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" className="od-btn od-btn-secondary" onClick={() => setNewGalleryUrls(p => [...p, ''])}>
+                + Add another photo
+              </button>
+              <label className="od-btn od-btn-secondary" style={{ display: 'inline-flex', marginLeft: '0.5rem', cursor: 'pointer' }}>
+                Choose photos
+                <input type="file" accept="image/*" multiple hidden
+                  onChange={e => setGalleryFiles(p => [...p, ...Array.from(e.target.files || [])])} />
+              </label>
+              {galleryFiles.length > 0 && <div style={{ marginTop: '0.55rem', color: 'var(--od-muted)', fontSize: '0.75rem' }}>{galleryFiles.map(file => file.name).join(', ')}</div>}
+              <small style={{ color: 'var(--od-muted)', fontSize: '0.72rem', marginTop: '0.3rem' }}>
+                Your main farmhouse photo will stay unchanged.
+              </small>
+            </div>
+          </div>
+          <div className="od-form-footer">
+            <button type="button" className="od-btn od-btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className="od-btn od-btn-primary" disabled={loading}>{loading ? 'Saving...' : 'Save Gallery Photos'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ icon, label, value, prefix = '', suffix = '', sub, trend, trendUp }) {
   return (
@@ -345,6 +420,7 @@ function OwnerDashboard({ user }) {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingFH, setEditingFH] = useState(null);
+  const [galleryOnly, setGalleryOnly] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const [bookingFilter, setBookingFilter] = useState('ALL');
@@ -383,7 +459,8 @@ function OwnerDashboard({ user }) {
     if (!farmhouseId || !farmhouses.length) return;
     const farmhouse = farmhouses.find(fh => fh.id === farmhouseId);
     if (farmhouse) {
-      setActiveSection('farmhouses');
+      setActiveSection('gallery');
+      setGalleryOnly(true);
       setEditingFH(farmhouse);
       routerNavigate(location.pathname, { replace: true, state: {} });
     }
@@ -416,6 +493,7 @@ function OwnerDashboard({ user }) {
       if (res.data.success) {
         addToast('Farm house updated!', 'success');
         setEditingFH(null);
+        setGalleryOnly(false);
         fetchOwnerData();
       }
     } catch (e) { addToast(e.response?.data?.message || 'Update failed', 'error'); }
@@ -460,6 +538,7 @@ function OwnerDashboard({ user }) {
   const navItems = [
     { id: 'overview',   label: 'Overview',       icon: ICONS.overview,   badge: null },
     { id: 'farmhouses', label: 'My Properties',  icon: ICONS.farmhouse,  badge: farmhouses.length || null },
+    { id: 'gallery',    label: 'Photo Gallery',  icon: ICONS.farmhouse,  badge: null },
     { id: 'bookings',   label: 'Bookings',        icon: ICONS.bookings,   badge: pendingBk.length || null, badgeType: 'warning' },
     { id: 'revenue',    label: 'Revenue',         icon: ICONS.revenue,    badge: null },
     { id: 'profile',    label: 'My Profile',      icon: ICONS.profile,    badge: null },
@@ -766,11 +845,11 @@ function OwnerDashboard({ user }) {
                             </div>
                             <div className="od-fh-footer">
                               <button className="od-btn od-btn-secondary od-btn-sm"
-                                onClick={() => setEditingFH(fh)}>
+                                onClick={() => { setGalleryOnly(true); setEditingFH(fh); }}>
                                 <Ico d={ICONS.farmhouse} size={13} /> Manage Gallery
                               </button>
                               <button className="od-btn od-btn-secondary od-btn-sm"
-                                onClick={() => setEditingFH(fh)}>
+                                onClick={() => { setGalleryOnly(false); setEditingFH(fh); }}>
                                 <Ico d={ICONS.edit} size={13} /> Edit
                               </button>
                               <button className="od-btn od-btn-danger od-btn-sm"
@@ -789,6 +868,43 @@ function OwnerDashboard({ user }) {
           )}
 
           {/* ══════════ BOOKINGS ══════════ */}
+          {activeSection === 'gallery' && (
+            <div>
+              <div className="od-section-header">
+                <div className="od-section-title"><span>Gallery</span> Photo Gallery</div>
+              </div>
+              {farmhouses.length === 0 ? (
+                <div className="od-empty">
+                  <h3>No properties yet</h3>
+                  <p>Add a property first, then you can add its gallery photos here.</p>
+                </div>
+              ) : (
+                <div className="od-fh-grid">
+                  {farmhouses.map(fh => {
+                    const galleryPhotoCount = normalizeGalleryValue(fh.imageUrls).length;
+                    return (
+                      <div key={fh.id} className="od-fh-card">
+                        <div className="od-fh-img">
+                          {fh.imageUrl ? <img src={fh.imageUrl} alt={fh.name} onError={e => { e.target.style.display = 'none'; }} /> : 'Gallery'}
+                        </div>
+                        <div className="od-fh-body">
+                          <div className="od-fh-name">{fh.name}</div>
+                          <div className="od-fh-location">{galleryPhotoCount} {galleryPhotoCount === 1 ? 'gallery photo' : 'gallery photos'}</div>
+                          <div className="od-fh-footer">
+                            <button className="od-btn od-btn-primary od-btn-sm"
+                              onClick={() => { setGalleryOnly(true); setEditingFH(fh); }}>
+                              <Ico d={ICONS.add} size={13} /> Add Photos
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {activeSection === 'bookings' && (
             <div>
               <div className="od-section-header">
@@ -1135,12 +1251,11 @@ function OwnerDashboard({ user }) {
       )}
 
       {editingFH && (
-        <FarmHouseFormModal
-          initial={editingFH}
-          onClose={() => setEditingFH(null)}
-          onSubmit={handleUpdateFH}
-          isEdit={true}
-        />
+        galleryOnly ? (
+          <GalleryPhotoModal initial={editingFH} onClose={() => { setEditingFH(null); setGalleryOnly(false); }} onSubmit={handleUpdateFH} />
+        ) : (
+          <FarmHouseFormModal initial={editingFH} onClose={() => setEditingFH(null)} onSubmit={handleUpdateFH} isEdit={true} />
+        )
       )}
 
       {confirmDelete && (
