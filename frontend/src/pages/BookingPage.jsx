@@ -28,6 +28,10 @@ const PAYMENT_METHODS = [
   { key: 'WALLET',      icon: '👝', label: 'Wallet',                desc: 'Paytm, Amazon Pay' },
 ];
 
+const getBookingHours = (slot) => slot === 'PM'
+  ? { checkIn: '06:00 PM', checkOut: '06:00 AM (next day)' }
+  : { checkIn: '06:00 AM', checkOut: '06:00 PM' };
+
 const STEPS = ['📅 Dates & Guests', '✨ Add-ons', '💳 Payment'];
 
 function BookingPage({ user }) {
@@ -36,6 +40,8 @@ function BookingPage({ user }) {
   const location = useLocation();
 
   const [farmhouse, setFarmhouse] = useState(null);
+  const [farmhouseBookings, setFarmhouseBookings] = useState([]);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,6 +53,7 @@ function BookingPage({ user }) {
 
   const [startDate, setStartDate] = useState(prefilled.prefilledStartDate || '');
   const [endDate, setEndDate]     = useState(prefilled.prefilledEndDate   || '');
+  const [timeSlot, setTimeSlot]   = useState(prefilled.prefilledTimeSlot || 'AM');
   const [guests, setGuests]       = useState(prefilled.prefilledGuests    || 1);
   const [specialRequirements, setSpecialRequirements] = useState('');
   const [addons, setAddons] = useState(
@@ -56,6 +63,7 @@ function BookingPage({ user }) {
 
   useEffect(() => {
     fetchFarmhouseDetails();
+    fetchFarmhouseBookings();
   }, [farmhouseId]);
 
   const fetchFarmhouseDetails = async () => {
@@ -73,11 +81,57 @@ function BookingPage({ user }) {
     }
   };
 
+  const fetchFarmhouseBookings = async () => {
+    try {
+      const response = await bookingAPI.getFarmHouseBookings(farmhouseId);
+      setFarmhouseBookings(response.data.bookings || []);
+    } catch {
+      setFarmhouseBookings([]);
+    }
+  };
+
+  const toDateKey = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const isDateBooked = (date, slot = timeSlot) => {
+    const dateKey = toDateKey(date);
+    return farmhouseBookings.some(booking =>
+      booking.status !== 'CANCELLED' &&
+      (booking.startDate === booking.endDate
+        ? dateKey === booking.startDate
+        : dateKey >= booking.startDate && dateKey < booking.endDate) &&
+      (!booking.timeSlot || booking.timeSlot === slot)
+    );
+  };
+
+  const calendarDays = (() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    return [
+      ...Array.from({ length: firstDay }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, index) => new Date(year, month, index + 1)),
+    ];
+  })();
+
+  const selectCalendarDate = (date, slot) => {
+    if (isDateBooked(date, slot) || toDateKey(date) < today) return;
+    setTimeSlot(slot);
+    const selectedDate = toDateKey(date);
+    setStartDate(selectedDate);
+    setEndDate(selectedDate);
+  };
+
   // ── Calculations ──────────────────────────────
   const nights = (() => {
     if (!startDate || !endDate) return 0;
     const diff = Math.ceil((new Date(endDate) - new Date(startDate)) / 86400000);
-    return diff > 0 ? diff : 0;
+    return diff >= 0 ? Math.max(1, diff) : 0;
   })();
 
   const baseCost   = (farmhouse?.pricePerDay || 0) * nights;
@@ -117,7 +171,7 @@ function BookingPage({ user }) {
     setError('');
     setBookingLoading(true);
     try {
-      const availability = await bookingAPI.checkAvailability(farmhouseId, startDate, endDate);
+      const availability = await bookingAPI.checkAvailability(farmhouseId, startDate, endDate, timeSlot);
       if (!availability.data.available) {
         setError('This farmhouse is not available for the selected dates. Please try different dates.');
         setBookingLoading(false);
@@ -134,6 +188,7 @@ function BookingPage({ user }) {
         farmHouseId: parseInt(farmhouseId),
         startDate,
         endDate,
+        timeSlot,
         numberOfGuests: parseInt(guests),
         specialRequirements: [specialRequirements, addonsText ? `Add-ons: ${addonsText}` : ''].filter(Boolean).join(' | '),
       };
@@ -191,8 +246,9 @@ function BookingPage({ user }) {
           <h2>Booking Confirmed!</h2>
           <p>Your stay at <strong>{farmhouse.name}</strong> is all set.<br />Check your email for confirmation details.</p>
           <div className="bk-success-details">
-            <div className="bk-succ-row"><span>📅 Check-in</span><strong>{fmt(startDate)}</strong></div>
-            <div className="bk-succ-row"><span>📅 Check-out</span><strong>{fmt(endDate)}</strong></div>
+            <div className="bk-succ-row"><span>📅 Check-in</span><strong>{fmt(startDate)}<small>{getBookingHours(timeSlot).checkIn}</small></strong></div>
+            <div className="bk-succ-row"><span>📅 Check-out</span><strong>{fmt(endDate)}<small>{getBookingHours(timeSlot).checkOut}</small></strong></div>
+            <div className="bk-succ-row"><span>🕒 Time slot</span><strong>{timeSlot === 'AM' ? 'AM Morning' : 'PM Night'}</strong></div>
             <div className="bk-succ-row"><span>🌙 Nights</span><strong>{nights}</strong></div>
             <div className="bk-succ-row"><span>👥 Guests</span><strong>{guests}</strong></div>
             <div className="bk-succ-divider"/>
@@ -254,7 +310,7 @@ function BookingPage({ user }) {
                 <span className="bk-panel-icon">📅</span>
                 <div>
                   <h2>When are you going?</h2>
-                  <p>Pick your check-in and check-out dates</p>
+                  <p>Pick dates, or choose the same date for one AM or PM booking</p>
                 </div>
               </div>
 
@@ -267,7 +323,7 @@ function BookingPage({ user }) {
                       type="date"
                       value={startDate}
                       min={today}
-                      onChange={e => { setStartDate(e.target.value); if (endDate && e.target.value >= endDate) setEndDate(''); }}
+                      onChange={e => { setStartDate(e.target.value); if (endDate && e.target.value > endDate) setEndDate(''); }}
                     />
                   </div>
                 </div>
@@ -282,6 +338,63 @@ function BookingPage({ user }) {
                       onChange={e => setEndDate(e.target.value)}
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="bk-availability-calendar">
+                <div className="bk-calendar-toolbar">
+                  <button
+                    type="button"
+                    className="bk-calendar-nav"
+                    onClick={() => setCalendarMonth(month => new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+                    aria-label="Previous month"
+                  >←</button>
+                  <strong>{calendarMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</strong>
+                  <button
+                    type="button"
+                    className="bk-calendar-nav"
+                    onClick={() => setCalendarMonth(month => new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+                    aria-label="Next month"
+                  >→</button>
+                </div>
+                <div className="bk-calendar-legend">
+                  <span><i className="bk-legend-dot available" /> Available</span>
+                  <span><i className="bk-legend-dot booked" /> Booked</span>
+                  <span className="bk-calendar-hint">Select a day to set check-in, then check-out</span>
+                </div>
+                <div className="bk-calendar-weekdays">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <span key={day}>{day}</span>)}
+                </div>
+                <div className="bk-calendar-grid">
+                  {calendarDays.map((date, index) => {
+                    if (!date) return <span className="bk-calendar-empty" key={`empty-${index}`} />;
+                    const dateKey = toDateKey(date);
+                    const past = dateKey < today;
+                    const selected = dateKey === startDate || dateKey === endDate;
+                    const dayBooked = isDateBooked(date, 'AM') && isDateBooked(date, 'PM');
+                    return (
+                      <div className={`bk-calendar-day ${dayBooked ? 'booked' : 'available'} ${past ? 'past' : ''} ${selected ? 'selected' : ''}`} key={dateKey}>
+                        <strong>{date.getDate()}</strong>
+                        <div className="bk-calendar-slots">
+                          {[{ label: 'AM', name: 'Morning' }, { label: 'PM', name: 'Night' }].map(slot => {
+                            const booked = isDateBooked(date, slot.label);
+                            return (
+                              <button
+                              type="button"
+                              key={slot.label}
+                              className={`bk-calendar-slot ${booked ? 'booked' : 'available'} ${selected && timeSlot === slot.label ? 'selected' : ''}`}
+                              disabled={booked || past}
+                              onClick={() => selectCalendarDate(date, slot.label)}
+                              title={`${slot.label} (${slot.name}) - ${booked ? 'Booked' : 'Available'}`}
+                              >
+                                <span>{slot.label === 'AM' ? '☀' : '☾'}</span>{slot.label} {slot.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -457,11 +570,15 @@ function BookingPage({ user }) {
             <div className="bk-receipt-section">
               <div className="bk-rcpt-row">
                 <span>🛬 Check-in</span>
-                <strong>{fmt(startDate)}</strong>
+                <strong>{fmt(startDate)}<small>{getBookingHours(timeSlot).checkIn}</small></strong>
               </div>
               <div className="bk-rcpt-row">
                 <span>🛫 Check-out</span>
-                <strong>{fmt(endDate)}</strong>
+                <strong>{fmt(endDate)}<small>{getBookingHours(timeSlot).checkOut}</small></strong>
+              </div>
+              <div className="bk-rcpt-row">
+                <span>🕒 Time slot</span>
+                <strong>{timeSlot === 'AM' ? 'AM Morning' : 'PM Night'}</strong>
               </div>
               <div className="bk-rcpt-row">
                 <span>🌙 Nights</span>

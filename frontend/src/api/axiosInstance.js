@@ -83,9 +83,9 @@ export const bookingAPI = {
     axios.put(`${API_BASE_URL}/bookings/${id}/confirm`),
   cancelBooking: (id) =>
     axios.put(`${API_BASE_URL}/bookings/${id}/cancel`),
-  checkAvailability: (farmHouseId, startDate, endDate) =>
+  checkAvailability: (farmHouseId, startDate, endDate, timeSlot = 'AM') =>
     axios.get(
-      `${API_BASE_URL}/bookings/check/availability?farmHouseId=${farmHouseId}&startDate=${startDate}&endDate=${endDate}`
+      `${API_BASE_URL}/bookings/check/availability?farmHouseId=${farmHouseId}&startDate=${startDate}&endDate=${endDate}&timeSlot=${timeSlot}`
     ),
   deleteBooking: (id) => axios.delete(`${API_BASE_URL}/bookings/${id}`),
 };

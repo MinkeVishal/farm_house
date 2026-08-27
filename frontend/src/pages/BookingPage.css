@@ -301,6 +301,108 @@
   box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
 }
 
+/* ── AVAILABILITY CALENDAR ─────────────────────── */
+.bk-availability-calendar {
+  margin: 0 0 1.5rem;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+.bk-calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #1a202c;
+  font-size: 1.05rem;
+  margin-bottom: 0.8rem;
+}
+.bk-calendar-nav {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #cbd5e0;
+  border-radius: 9px;
+  background: white;
+  color: #4a5568;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+.bk-calendar-nav:hover { border-color: #667eea; color: #667eea; }
+.bk-calendar-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.bk-calendar-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.bk-calendar-hint { margin-left: auto; font-weight: 600; }
+.bk-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.bk-legend-dot.available { background: #16a34a; }
+.bk-legend-dot.booked { background: #dc2626; }
+.bk-calendar-weekdays,
+.bk-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.bk-calendar-weekdays {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+.bk-calendar-day {
+  min-width: 0;
+  min-height: 92px;
+  padding: 0.5rem;
+  border: 1px solid #dbe4ee;
+  border-radius: 10px;
+  background: white;
+}
+.bk-calendar-day > strong {
+  display: block;
+  color: #334155;
+  font-size: 0.82rem;
+  margin-bottom: 0.35rem;
+}
+.bk-calendar-day.past { opacity: 0.45; }
+.bk-calendar-day.selected { border: 2px solid #667eea; padding: calc(0.5rem - 1px); }
+.bk-calendar-slots { display: grid; gap: 0.25rem; }
+.bk-calendar-slot {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.3rem;
+  border: 0;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: left;
+}
+.bk-calendar-slot span { font-size: 0.72rem; }
+.bk-calendar-slot.available { background: #16a34a; }
+.bk-calendar-slot.available:hover { background: #15803d; }
+.bk-calendar-slot.booked { background: #dc2626; cursor: not-allowed; }
+.bk-calendar-slot.selected { box-shadow: 0 0 0 2px #667eea, 0 0 0 4px rgba(102,126,234,0.2); }
+.bk-calendar-slot:disabled { cursor: not-allowed; }
+
 /* ── NIGHTS CHIP ────────────────────────────────── */
 .bk-nights-chip {
   display: inline-flex;
