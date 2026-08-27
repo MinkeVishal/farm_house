@@ -175,18 +175,20 @@ public class BookingController {
     public ResponseEntity<?> checkAvailability(
             @RequestParam Long farmHouseId,
             @RequestParam String startDate,
-            @RequestParam String endDate) {
+            @RequestParam String endDate,
+            @RequestParam(defaultValue = "AM") String timeSlot) {
         try {
             LocalDate start = LocalDate.parse(startDate);
             LocalDate end = LocalDate.parse(endDate);
             
-            boolean available = bookingService.isAvailable(farmHouseId, start, end);
+            boolean available = bookingService.isAvailable(farmHouseId, start, end, timeSlot);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("available", available);
             response.put("farmHouseId", farmHouseId);
             response.put("startDate", startDate);
             response.put("endDate", endDate);
+            response.put("timeSlot", timeSlot.toUpperCase());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();

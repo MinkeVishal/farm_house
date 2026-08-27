@@ -16,6 +16,7 @@ public class BookingDTO {
     private String farmHouseName;
     private LocalDate startDate;
     private LocalDate endDate;
+    private String timeSlot;
     private Double totalPrice;
     private Integer numberOfGuests;
     private String specialRequirements;

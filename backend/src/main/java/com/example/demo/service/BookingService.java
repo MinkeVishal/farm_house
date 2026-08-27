@@ -10,6 +10,8 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -59,29 +61,35 @@ public class BookingService {
         if (farmHouse.getIsApproved() == null || !farmHouse.getIsApproved()) {
             throw new RuntimeException("Farm house is not approved by admin");
         }
+
+        if (dto.getStartDate() == null || dto.getEndDate() == null) {
+            throw new RuntimeException("Start date and end date are required");
+        }
+
+        if (dto.getStartDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Start date cannot be in the past");
+        }
+
+        if (dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new RuntimeException("End date cannot be before start date");
+        }
+
+        Booking.TimeSlot timeSlot = parseTimeSlot(dto.getTimeSlot());
         
         // Check date conflicts
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
             dto.getFarmHouseId(),
             dto.getStartDate(),
-            dto.getEndDate()
+            dto.getEndDate(),
+            timeSlot
         );
         
         if (!conflicts.isEmpty()) {
-            throw new RuntimeException("Farm house is already booked for these dates");
-        }
-        
-        // Validate dates
-        if (dto.getStartDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Start date cannot be in the past");
-        }
-        
-        if (dto.getEndDate().isBefore(dto.getStartDate())) {
-            throw new RuntimeException("End date must be after start date");
+            throw new RuntimeException("Farm house is already booked for these dates and time slot");
         }
         
         // Calculate total price
-        long numberOfDays = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
+        long numberOfDays = Math.max(1, ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate()));
         double totalPrice = numberOfDays * farmHouse.getPricePerDay();
         
         // Create booking
@@ -90,6 +98,7 @@ public class BookingService {
         booking.setFarmHouse(farmHouse);
         booking.setStartDate(dto.getStartDate());
         booking.setEndDate(dto.getEndDate());
+        booking.setTimeSlot(timeSlot);
         booking.setTotalPrice(totalPrice);
         booking.setNumberOfGuests(dto.getNumberOfGuests());
         booking.setSpecialRequirements(dto.getSpecialRequirements());
@@ -177,6 +186,18 @@ public class BookingService {
         if (booking.getStatus() == Booking.BookingStatus.CANCELLED) {
             throw new RuntimeException("Booking is already cancelled");
         }
+
+        if (booking.getStatus() == Booking.BookingStatus.COMPLETED) {
+            throw new RuntimeException("Completed bookings cannot be cancelled");
+        }
+
+        LocalTime shiftStart = booking.getTimeSlot() == Booking.TimeSlot.PM
+            ? LocalTime.of(18, 0)
+            : LocalTime.of(6, 0);
+        LocalDateTime cancellationDeadline = LocalDateTime.of(booking.getStartDate(), shiftStart).minusHours(6);
+        if (!LocalDateTime.now().isBefore(cancellationDeadline)) {
+            throw new RuntimeException("Bookings can only be cancelled at least 6 hours before the shift starts");
+        }
         
         booking.setStatus(Booking.BookingStatus.CANCELLED);
         Booking cancelledBooking = bookingRepository.save(booking);
@@ -186,11 +207,20 @@ public class BookingService {
     /**
      * Check availability for date range
      */
-    public boolean isAvailable(Long farmHouseId, LocalDate startDate, LocalDate endDate) {
+    public boolean isAvailable(Long farmHouseId, LocalDate startDate, LocalDate endDate, String requestedTimeSlot) {
+        Booking.TimeSlot timeSlot = parseTimeSlot(requestedTimeSlot);
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
-            farmHouseId, startDate, endDate
+            farmHouseId, startDate, endDate, timeSlot
         );
         return conflicts.isEmpty();
+    }
+
+    private Booking.TimeSlot parseTimeSlot(String timeSlot) {
+        try {
+            return Booking.TimeSlot.valueOf(timeSlot == null ? "AM" : timeSlot.toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new RuntimeException("Time slot must be AM or PM");
+        }
     }
     
     /**
@@ -205,6 +235,7 @@ public class BookingService {
         dto.setFarmHouseName(booking.getFarmHouse().getName());
         dto.setStartDate(booking.getStartDate());
         dto.setEndDate(booking.getEndDate());
+        dto.setTimeSlot(booking.getTimeSlot() == null ? null : booking.getTimeSlot().name());
         dto.setTotalPrice(booking.getTotalPrice());
         dto.setNumberOfGuests(booking.getNumberOfGuests());
         dto.setSpecialRequirements(booking.getSpecialRequirements());

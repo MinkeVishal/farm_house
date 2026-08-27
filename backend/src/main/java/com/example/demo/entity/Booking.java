@@ -29,6 +29,10 @@ public class Booking {
     
     @Column(nullable = false)
     private LocalDate endDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "time_slot")
+    private TimeSlot timeSlot;
     
     @Column(nullable = false)
     private Double totalPrice;
@@ -54,5 +58,9 @@ public class Booking {
     
     public enum BookingStatus {
         PENDING, CONFIRMED, CANCELLED, COMPLETED
+    }
+
+    public enum TimeSlot {
+        AM, PM
     }
 }
