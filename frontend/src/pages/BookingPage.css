@@ -379,6 +379,11 @@
 .bk-calendar-day.past { opacity: 0.45; }
 .bk-calendar-day.selected { border: 2px solid #667eea; padding: calc(0.5rem - 1px); }
 .bk-calendar-slots { display: grid; gap: 0.25rem; }
+.bk-booking-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin: 1rem 0 1.25rem; }
+.bk-booking-type { display: grid; gap: 0.25rem; padding: 0.85rem; border: 1px solid #d8d3ca; border-radius: 8px; background: #fff; color: #3d4038; text-align: left; cursor: pointer; }
+.bk-booking-type span { color: #73766d; font-size: 0.78rem; }
+.bk-booking-type.selected { border-color: #315c45; background: #edf5ee; box-shadow: 0 0 0 2px rgba(49, 92, 69, 0.15); }
+.bk-booking-type:hover { border-color: #315c45; }
 .bk-calendar-slot {
   display: flex;
   align-items: center;
@@ -402,6 +407,7 @@
 .bk-calendar-slot.booked { background: #dc2626; cursor: not-allowed; }
 .bk-calendar-slot.selected { box-shadow: 0 0 0 2px #667eea, 0 0 0 4px rgba(102,126,234,0.2); }
 .bk-calendar-slot:disabled { cursor: not-allowed; }
+@media (max-width: 640px) { .bk-booking-types { grid-template-columns: 1fr; } }
 
 /* ── NIGHTS CHIP ────────────────────────────────── */
 .bk-nights-chip {

@@ -28,9 +28,18 @@ const PAYMENT_METHODS = [
   { key: 'WALLET',      icon: '👝', label: 'Wallet',                desc: 'Paytm, Amazon Pay' },
 ];
 
-const getBookingHours = (slot) => slot === 'PM'
+const BOOKING_TYPES = [
+  { key: 'AM', label: 'AM (Only Day)', hours: '06:00 AM - 06:00 PM' },
+  { key: 'PM', label: 'PM (Only Night)', hours: '06:00 PM - 06:00 AM' },
+  { key: 'FULL_DAY', label: 'AM + PM (Full Day)', hours: '06:00 AM - 06:00 AM next day' },
+];
+const normalizeBookingType = (slot) => slot === 'AM' ? 'DAY' : slot === 'PM' ? 'NIGHT' : slot;
+const toUiBookingType = (slot) => slot === 'DAY' ? 'AM' : slot === 'NIGHT' ? 'PM' : slot;
+const getBookingHours = (slot) => normalizeBookingType(slot) === 'NIGHT'
   ? { checkIn: '06:00 PM', checkOut: '06:00 AM (next day)' }
-  : { checkIn: '06:00 AM', checkOut: '06:00 PM' };
+  : normalizeBookingType(slot) === 'FULL_DAY'
+    ? { checkIn: '06:00 AM', checkOut: '06:00 AM (next day)' }
+    : { checkIn: '06:00 AM', checkOut: '06:00 PM' };
 
 const STEPS = ['📅 Dates & Guests', '✨ Add-ons', '💳 Payment'];
 
@@ -53,7 +62,7 @@ function BookingPage({ user }) {
 
   const [startDate, setStartDate] = useState(prefilled.prefilledStartDate || '');
   const [endDate, setEndDate]     = useState(prefilled.prefilledEndDate   || '');
-  const [timeSlot, setTimeSlot]   = useState(prefilled.prefilledTimeSlot || 'AM');
+  const [timeSlot, setTimeSlot]   = useState(toUiBookingType(prefilled.prefilledTimeSlot) || '');
   const [guests, setGuests]       = useState(prefilled.prefilledGuests    || 1);
   const [specialRequirements, setSpecialRequirements] = useState('');
   const [addons, setAddons] = useState(
@@ -104,7 +113,7 @@ function BookingPage({ user }) {
       (booking.startDate === booking.endDate
         ? dateKey === booking.startDate
         : dateKey >= booking.startDate && dateKey < booking.endDate) &&
-      (!booking.timeSlot || booking.timeSlot === slot)
+      (!booking.timeSlot || normalizeBookingType(booking.timeSlot) === 'FULL_DAY' || normalizeBookingType(slot) === 'FULL_DAY' || normalizeBookingType(booking.timeSlot) === normalizeBookingType(slot))
     );
   };
 
@@ -151,8 +160,8 @@ function BookingPage({ user }) {
   const step0Valid = startDate && endDate && nights > 0 && guests >= 1;
 
   const handleNext = () => {
-    if (currentStep === 0 && !step0Valid) {
-      setError('Please select valid check-in and check-out dates.');
+    if (currentStep === 0 && (!step0Valid || !timeSlot)) {
+      setError(!timeSlot ? 'Please select a time slot: AM or PM.' : 'Please select valid check-in and check-out dates.');
       return;
     }
     setError('');
@@ -248,7 +257,7 @@ function BookingPage({ user }) {
           <div className="bk-success-details">
             <div className="bk-succ-row"><span>📅 Check-in</span><strong>{fmt(startDate)}<small>{getBookingHours(timeSlot).checkIn}</small></strong></div>
             <div className="bk-succ-row"><span>📅 Check-out</span><strong>{fmt(endDate)}<small>{getBookingHours(timeSlot).checkOut}</small></strong></div>
-            <div className="bk-succ-row"><span>🕒 Time slot</span><strong>{timeSlot === 'AM' ? 'AM Morning' : 'PM Night'}</strong></div>
+            <div className="bk-succ-row"><span>🕒 Booking type</span><strong>{BOOKING_TYPES.find(type => type.key === normalizeBookingType(timeSlot))?.label}</strong></div>
             <div className="bk-succ-row"><span>🌙 Nights</span><strong>{nights}</strong></div>
             <div className="bk-succ-row"><span>👥 Guests</span><strong>{guests}</strong></div>
             <div className="bk-succ-divider"/>
@@ -310,8 +319,22 @@ function BookingPage({ user }) {
                 <span className="bk-panel-icon">📅</span>
                 <div>
                   <h2>When are you going?</h2>
-                  <p>Pick dates, or choose the same date for one AM or PM booking</p>
+                  <p>Choose a date and book the farmhouse for the day, night, or both</p>
                 </div>
+              </div>
+
+              <div className="bk-booking-types" role="group" aria-label="Booking type">
+                {BOOKING_TYPES.map(type => (
+                  <button
+                    type="button"
+                    key={type.key}
+                    className={`bk-booking-type ${normalizeBookingType(timeSlot) === type.key ? 'selected' : ''}`}
+                    onClick={() => setTimeSlot(type.key)}
+                  >
+                    <strong>{type.label}</strong>
+                    <span>{type.hours}</span>
+                  </button>
+                ))}
               </div>
 
               <div className="bk-date-row">
@@ -371,12 +394,12 @@ function BookingPage({ user }) {
                     const dateKey = toDateKey(date);
                     const past = dateKey < today;
                     const selected = dateKey === startDate || dateKey === endDate;
-                    const dayBooked = isDateBooked(date, 'AM') && isDateBooked(date, 'PM');
+                    const dayBooked = isDateBooked(date, 'FULL_DAY');
                     return (
                       <div className={`bk-calendar-day ${dayBooked ? 'booked' : 'available'} ${past ? 'past' : ''} ${selected ? 'selected' : ''}`} key={dateKey}>
                         <strong>{date.getDate()}</strong>
                         <div className="bk-calendar-slots">
-                          {[{ label: 'AM', name: 'Morning' }, { label: 'PM', name: 'Night' }].map(slot => {
+                          {[{ label: 'AM', name: 'Day' }, { label: 'PM', name: 'Night' }].map(slot => {
                             const booked = isDateBooked(date, slot.label);
                             return (
                               <button
@@ -578,7 +601,7 @@ function BookingPage({ user }) {
               </div>
               <div className="bk-rcpt-row">
                 <span>🕒 Time slot</span>
-                <strong>{timeSlot === 'AM' ? 'AM Morning' : 'PM Night'}</strong>
+                <strong>{BOOKING_TYPES.find(type => type.key === normalizeBookingType(timeSlot))?.label}</strong>
               </div>
               <div className="bk-rcpt-row">
                 <span>🌙 Nights</span>

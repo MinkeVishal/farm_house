@@ -7,16 +7,21 @@ const statusLabels = { ALL: 'All stays', PENDING: 'Pending', CONFIRMED: 'Confirm
 
 const formatDate = (date) => date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set';
 const formatCurrency = (amount) => `₹${(Number(amount) || 0).toLocaleString('en-IN')}`;
-const timeSlotDetails = (timeSlot) => timeSlot === 'PM'
-  ? 'PM Night (06:00 PM - 06:00 AM)'
-  : 'AM Morning (06:00 AM - 06:00 PM)';
-const bookingTimeDetails = (timeSlot) => timeSlot === 'PM'
+const normalizeBookingType = (timeSlot) => timeSlot === 'AM' ? 'DAY' : timeSlot === 'PM' ? 'NIGHT' : timeSlot;
+const timeSlotDetails = (timeSlot) => ({
+  DAY: 'Only Day (06:00 AM - 06:00 PM)',
+  NIGHT: 'Only Night (06:00 PM - 06:00 AM)',
+  FULL_DAY: 'Full Day & Night (06:00 AM - 06:00 AM)',
+}[normalizeBookingType(timeSlot)] || 'Booking type');
+const bookingTimeDetails = (timeSlot) => normalizeBookingType(timeSlot) === 'NIGHT'
   ? { checkIn: '06:00 PM', checkOut: '06:00 AM (next day)' }
+  : normalizeBookingType(timeSlot) === 'FULL_DAY'
+    ? { checkIn: '06:00 AM', checkOut: '06:00 AM (next day)' }
   : { checkIn: '06:00 AM', checkOut: '06:00 PM' };
 const statusClass = (status) => `ub-status ub-status-${(status || 'pending').toLowerCase()}`;
 const cancellationDeadline = (booking) => {
   if (!booking?.startDate) return null;
-  const shiftStart = booking.timeSlot === 'PM' ? '18:00:00' : '06:00:00';
+  const shiftStart = normalizeBookingType(booking.timeSlot) === 'NIGHT' ? '18:00:00' : '06:00:00';
   return new Date(`${booking.startDate}T${shiftStart}`).getTime() - (6 * 60 * 60 * 1000);
 };
 const canCancelBooking = (booking) =>
