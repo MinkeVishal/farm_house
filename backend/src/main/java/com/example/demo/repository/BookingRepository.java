@@ -19,13 +19,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
            "AND b.status != 'CANCELLED' " +
            "AND ((b.startDate = b.endDate AND b.startDate >= :startDate AND b.startDate <= :endDate) " +
            "OR (b.startDate < b.endDate AND NOT (b.endDate <= :startDate OR b.startDate >= :endDate)) " +
-           "OR (:startDate = :endDate AND b.startDate <= :startDate AND b.endDate > :startDate)) " +
-           "AND (b.timeSlot IS NULL OR b.timeSlot = :timeSlot)")
+           "OR (:startDate = :endDate AND b.startDate <= :startDate AND b.endDate > :startDate))")
     List<Booking> findConflictingBookings(
         @Param("farmHouseId") Long farmHouseId,
         @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate,
-        @Param("timeSlot") Booking.TimeSlot timeSlot
+        @Param("endDate") LocalDate endDate
     );
     
     List<Booking> findByStatus(Booking.BookingStatus status);

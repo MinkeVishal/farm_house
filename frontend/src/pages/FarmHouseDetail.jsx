@@ -797,80 +797,6 @@ function FarmHouseDetail({ user }) {
               )}
             </div>
 
-            {/* Interactive Inputs */}
-            <div className="fd-calculator-inputs">
-              <div className="fd-calc-row">
-                <div className="fd-input-group">
-                  <label>Check In</label>
-                  <input
-                    type="date"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                  />
-                </div>
-                <div className="fd-input-group">
-                  <label>Check Out</label>
-                  <input
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    min={checkIn || new Date().toISOString().split("T")[0]}
-                  />
-                </div>
-              </div>
-              
-              <div className="fd-input-group">
-                <label>Guests (Max {farmhouse.maxGuests})</label>
-                <input
-                  type="number"
-                  value={guestsCount}
-                  onChange={(e) => setGuestsCount(Math.min(Math.max(parseInt(e.target.value) || 1, 1), farmhouse.maxGuests))}
-                  min="1"
-                  max={farmhouse.maxGuests}
-                />
-              </div>
-
-              {/* Addons Checklist */}
-              <div className="fd-addons-group">
-                <span className="fd-addons-title">✨ Customize Stay (Add-ons)</span>
-                <div className="fd-addons-list">
-                  <label className="fd-addon-toggle">
-                    <input
-                      type="checkbox"
-                      checked={addons.chef}
-                      onChange={() => setAddons(p => ({ ...p, chef: !p.chef }))}
-                    />
-                    <span className="fd-addon-lbl">👨‍🍳 Chef & Catering (+₹1,800/g/n)</span>
-                  </label>
-                  <label className="fd-addon-toggle">
-                    <input
-                      type="checkbox"
-                      checked={addons.bonfire}
-                      onChange={() => setAddons(p => ({ ...p, bonfire: !p.bonfire }))}
-                    />
-                    <span className="fd-addon-lbl">🪵 Bonfire Setup (₹1,500)</span>
-                  </label>
-                  <label className="fd-addon-toggle">
-                    <input
-                      type="checkbox"
-                      checked={addons.dj}
-                      onChange={() => setAddons(p => ({ ...p, dj: !p.dj }))}
-                    />
-                    <span className="fd-addon-lbl">🎵 DJ Sound System (₹4,000)</span>
-                  </label>
-                  <label className="fd-addon-toggle">
-                    <input
-                      type="checkbox"
-                      checked={addons.adventure}
-                      onChange={() => setAddons(p => ({ ...p, adventure: !p.adventure }))}
-                    />
-                    <span className="fd-addon-lbl">🛶 Adventure Tour (₹2,500)</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
             <div className="fd-divider" />
 
             {/* Bill Breakdown */}
@@ -946,6 +872,17 @@ function FarmHouseDetail({ user }) {
           </div>
         </div>
       </div>
+
+      <section className="fd-location-card" aria-label="Farmhouse location">
+        <h2>Location</h2>
+        <p>📍 {farmhouse.location}</p>
+        <iframe
+          title={`Map showing ${farmhouse.location}`}
+          src={`https://www.google.com/maps?q=${encodeURIComponent(farmhouse.location)}&output=embed`}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      </section>
 
       {/* ── FLOATING BOOK NOW BAR (mobile) ── */}
       <div className="fd-sticky-bar">

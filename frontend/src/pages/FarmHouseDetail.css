@@ -27,6 +27,35 @@
   to { transform: rotate(360deg); }
 }
 
+.fd-location-card {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(45, 55, 72, 0.08);
+}
+
+.fd-location-card h2 {
+  margin: 0 0 0.35rem;
+  color: #1a202c;
+  font-size: 1.15rem;
+}
+
+.fd-location-card p {
+  margin: 0 0 1rem;
+  color: #718096;
+  font-size: 0.92rem;
+}
+
+.fd-location-card iframe {
+  display: block;
+  width: 100%;
+  height: 240px;
+  border: 0;
+  border-radius: 10px;
+}
+
 /* ── ERROR ── */
 .fd-error {
   min-height: 60vh;
@@ -966,6 +995,36 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.fd-location-card {
+  width: min(100%, 1200px);
+  margin: 1.5rem auto 0;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(45, 55, 72, 0.08);
+}
+
+.fd-location-card h2 {
+  margin: 0 0 0.35rem;
+  color: #1a202c;
+  font-size: 1.15rem;
+}
+
+.fd-location-card p {
+  margin: 0 0 1rem;
+  color: #718096;
+  font-size: 0.92rem;
+}
+
+.fd-location-card iframe {
+  display: block;
+  width: 100%;
+  height: 360px;
+  border: 0;
+  border-radius: 10px;
 }
 
 /* ══ RESPONSIVE ══ */

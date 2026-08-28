@@ -80,11 +80,10 @@ public class BookingService {
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
             dto.getFarmHouseId(),
             dto.getStartDate(),
-            dto.getEndDate(),
-            timeSlot
+            dto.getEndDate()
         );
         
-        if (!conflicts.isEmpty()) {
+        if (conflicts.stream().anyMatch(booking -> slotsOverlap(booking.getTimeSlot(), timeSlot))) {
             throw new RuntimeException("Farm house is already booked for these dates and time slot");
         }
         
@@ -210,17 +209,39 @@ public class BookingService {
     public boolean isAvailable(Long farmHouseId, LocalDate startDate, LocalDate endDate, String requestedTimeSlot) {
         Booking.TimeSlot timeSlot = parseTimeSlot(requestedTimeSlot);
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
-            farmHouseId, startDate, endDate, timeSlot
+            farmHouseId, startDate, endDate
         );
-        return conflicts.isEmpty();
+        return conflicts.stream().noneMatch(booking -> slotsOverlap(booking.getTimeSlot(), timeSlot));
     }
 
     private Booking.TimeSlot parseTimeSlot(String timeSlot) {
-        try {
-            return Booking.TimeSlot.valueOf(timeSlot == null ? "AM" : timeSlot.toUpperCase());
-        } catch (IllegalArgumentException exception) {
-            throw new RuntimeException("Time slot must be AM or PM");
+        if (timeSlot == null || timeSlot.isBlank()) {
+            throw new RuntimeException("Time slot must be AM or PM (or FULL_DAY)");
         }
+        String requestedSlot = timeSlot.toUpperCase();
+        if ("AM".equals(requestedSlot)) {
+            return Booking.TimeSlot.DAY;
+        }
+        if ("PM".equals(requestedSlot)) {
+            return Booking.TimeSlot.NIGHT;
+        }
+        try {
+            return Booking.TimeSlot.valueOf(requestedSlot);
+        } catch (IllegalArgumentException exception) {
+            throw new RuntimeException("Booking type must be DAY, NIGHT, or FULL_DAY");
+        }
+    }
+
+    private boolean slotsOverlap(Booking.TimeSlot existingSlot, Booking.TimeSlot requestedSlot) {
+        if (existingSlot == null || existingSlot == Booking.TimeSlot.FULL_DAY || requestedSlot == Booking.TimeSlot.FULL_DAY) {
+            return true;
+        }
+        return normalizeSlot(existingSlot) == normalizeSlot(requestedSlot);
+    }
+
+    private Booking.TimeSlot normalizeSlot(Booking.TimeSlot slot) {
+        return slot == Booking.TimeSlot.AM ? Booking.TimeSlot.DAY
+            : slot == Booking.TimeSlot.PM ? Booking.TimeSlot.NIGHT : slot;
     }
     
     /**

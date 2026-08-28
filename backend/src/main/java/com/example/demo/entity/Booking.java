@@ -61,6 +61,7 @@ public class Booking {
     }
 
     public enum TimeSlot {
+        DAY, NIGHT, FULL_DAY,
         AM, PM
     }
 }

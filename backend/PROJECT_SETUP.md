@@ -299,12 +299,12 @@ CREATE TABLE payments (
   "farmHouseId": 1,
   "startDate": "2024-05-01",
   "endDate": "2024-05-05",
-  "timeSlot": "AM",
+  "timeSlot": "DAY",
   "numberOfGuests": 4,
   "specialRequirements": "Need extra bed"
 }
 ```
-For a one-day booking, use the same date for `startDate` and `endDate`, then select either `AM` or `PM`. The same date can have one AM booking and one PM booking.
+For a one-day booking, use the same date for `startDate` and `endDate`, then select `DAY`, `NIGHT`, or `FULL_DAY`. The same date can have one day booking and one night booking, while a full-day booking occupies both. `AM` and `PM` remain accepted as legacy aliases for `DAY` and `NIGHT`.
 
 ### Payments
 
@@ -345,7 +345,7 @@ For a one-day booking, use the same date for `startDate` and `endDate`, then sel
 ### 3. **Customer**
    - Browse farm houses
    - Search by location/price
-  - Make AM Morning or PM Night bookings
+  - Make day-only, night-only, or full-day bookings
    - Make payments
    - View their bookings
 
