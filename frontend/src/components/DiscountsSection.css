@@ -1,0 +1,377 @@
+/* ═══════════════════════════════════════════════════════
+   DISCOUNTS SECTION — Homepage
+   ═══════════════════════════════════════════════════════ */
+
+.discounts-section {
+  position: relative;
+  padding: 6rem 2rem;
+  background: #f8f4ff;
+  overflow: hidden;
+}
+
+/* Decorative blobs */
+.ds-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  pointer-events: none;
+}
+.ds-blob-1 {
+  width: 400px;
+  height: 400px;
+  background: #c084fc;
+  top: -100px;
+  left: -100px;
+}
+.ds-blob-2 {
+  width: 350px;
+  height: 350px;
+  background: #67e8f9;
+  bottom: -80px;
+  right: -80px;
+}
+
+/* Section chip override */
+.ds-chip {
+  background: linear-gradient(135deg, #7c3aed, #db2777) !important;
+  color: #fff !important;
+}
+
+/* Owner / Admin Management Quick Button */
+.ds-owner-manage-btn {
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  color: #6d28d9;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ds-owner-manage-btn:hover {
+  background: #7c3aed;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* ── Interactive Date Filter ───────────────────────────── */
+.ds-filter-container {
+  max-width: 700px;
+  margin: 0 auto 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ds-filter-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  padding: 0.75rem 1.4rem;
+  border-radius: 50px;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ds-filter-icon {
+  font-size: 1.2rem;
+}
+
+.ds-filter-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.ds-date-picker {
+  padding: 0.45rem 0.9rem;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  background: #f8fafc;
+  cursor: pointer;
+}
+.ds-date-picker:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.ds-clear-date-btn {
+  background: #f1f5f9;
+  border: none;
+  color: #64748b;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ds-clear-date-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.ds-filter-status {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.ds-no-deals {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 500px;
+  margin: 0 auto 2.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+.ds-no-deals span {
+  font-size: 2.5rem;
+}
+.ds-no-deals p {
+  color: #64748b;
+  margin: 0.75rem 0 1.25rem;
+}
+
+/* ── Grid ─────────────────────────────────────────────── */
+.ds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+/* ── Card ─────────────────────────────────────────────── */
+.ds-card {
+  position: relative;
+  border-radius: 22px;
+  padding: 2rem 1.75rem 1.5rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  color: #ffffff;
+}
+.ds-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+.ds-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
+}
+
+/* Discount badge (top-right corner) */
+.ds-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.ds-badge-percent {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1px;
+}
+.ds-badge-off {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 1px;
+}
+
+/* Card header — emoji + type + farmhouse tag */
+.ds-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.ds-type-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+.ds-type-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+.ds-farmhouse-tag {
+  font-size: 0.92rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  margin-top: 0.25rem;
+  backdrop-filter: blur(4px);
+  display: inline-block;
+}
+
+/* Card body */
+.ds-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+.ds-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.3;
+}
+.ds-desc {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Special offer box */
+.ds-offer-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.ds-offer-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ds-offer-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Validity & Countdown */
+.ds-validity {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+.ds-clock { font-size: 0.95rem; }
+
+.ds-countdown-badge {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 20px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  letter-spacing: 0.3px;
+}
+
+/* Interactive Voucher Button */
+.ds-voucher-btn {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+.ds-voucher-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+.ds-voucher-btn.copied {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #ffffff;
+}
+
+/* Footer & CTA */
+.ds-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.ds-cta-btn {
+  display: inline-block;
+  padding: 0.7rem 1.4rem;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+.ds-cta-btn:hover {
+  background: #f8fafc;
+  transform: scale(1.04);
+}
+
+.ds-creator-tag {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: right;
+}
+
+/* Footer note */
+.ds-footer-note {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .ds-grid {
+    grid-template-columns: 1fr;
+  }
+  .discounts-section {
+    padding: 4rem 1.25rem;
+  }
+  .ds-filter-box {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 20px;
+  }
+}

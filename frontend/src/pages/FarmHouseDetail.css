@@ -1,8 +1,8 @@
-/* ═══════════════════════════════════════
-   FARM HOUSE DETAIL PAGE  –  Premium Design
-═══════════════════════════════════════ */
+﻿/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+   FARM HOUSE DETAIL PAGE  ΓÇô  Premium Design
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
-/* ── LOADER ── */
+/* ΓöÇΓöÇ LOADER ΓöÇΓöÇ */
 .fd-loader {
   min-height: 60vh;
   display: flex;
@@ -56,7 +56,7 @@
   border-radius: 10px;
 }
 
-/* ── ERROR ── */
+/* ΓöÇΓöÇ ERROR ΓöÇΓöÇ */
 .fd-error {
   min-height: 60vh;
   display: flex;
@@ -84,7 +84,7 @@
 }
 .fd-error button:hover { opacity: 0.85; }
 
-/* ── PAGE WRAPPER ── */
+/* ΓöÇΓöÇ PAGE WRAPPER ΓöÇΓöÇ */
 .fd-page {
   min-height: 100vh;
   background: #f7f8fc;
@@ -94,7 +94,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* ── BACK BUTTON ── */
+/* ΓöÇΓöÇ BACK BUTTON ΓöÇΓöÇ */
 .fd-back-btn {
   display: inline-flex;
   align-items: center;
@@ -118,7 +118,7 @@
   transform: translateX(-3px);
 }
 
-/* ── HERO ── */
+/* ΓöÇΓöÇ HERO ΓöÇΓöÇ */
 .fd-hero {
   position: relative;
   border-radius: 24px;
@@ -204,7 +204,7 @@
   color: #4a5568;
 }
 
-/* ── GALLERY ── */
+/* ΓöÇΓöÇ GALLERY ΓöÇΓöÇ */
 .fd-gallery {
   margin: 1rem 0 1.5rem;
 }
@@ -244,7 +244,7 @@
   color: white;
 }
 
-/* ── THUMBNAIL STRIP ── */
+/* ΓöÇΓöÇ THUMBNAIL STRIP ΓöÇΓöÇ */
 .fd-thumbs {
   display: flex;
   gap: 0.75rem;
@@ -274,7 +274,7 @@
   width: 100%; height: 100%; object-fit: cover; display: block;
 }
 
-/* ── STATS RIBBON ── */
+/* ΓöÇΓöÇ STATS RIBBON ΓöÇΓöÇ */
 .fd-stats-ribbon {
   display: flex;
   align-items: center;
@@ -318,7 +318,7 @@
   background: #e2e8f0;
 }
 
-/* ── MAIN TWO-COLUMN ── */
+/* ΓöÇΓöÇ MAIN TWO-COLUMN ΓöÇΓöÇ */
 .fd-main {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -326,7 +326,7 @@
   align-items: start;
 }
 
-/* ── TABS ── */
+/* ΓöÇΓöÇ TABS ΓöÇΓöÇ */
 .fd-tabs {
   display: flex;
   gap: 0.5rem;
@@ -357,7 +357,7 @@
   box-shadow: 0 4px 14px rgba(102,126,234,0.35);
 }
 
-/* ── PANELS ── */
+/* ΓöÇΓöÇ PANELS ΓöÇΓöÇ */
 .fd-panel {
   background: white;
   border-radius: 20px;
@@ -482,7 +482,7 @@
 .fd-host-info span   { font-size: 0.85rem; color: #667eea; font-weight: 600; }
 .fd-host-info p      { font-size: 0.9rem; color: #718096; line-height: 1.6; margin: 0.5rem 0 0; }
 
-/* ── BOOKING CARD ── */
+/* ΓöÇΓöÇ BOOKING CARD ΓöÇΓöÇ */
 .fd-booking-card {
   background: white;
   border-radius: 24px;
@@ -548,7 +548,7 @@
   margin: 0.5rem 0 1.5rem;
 }
 
-/* ── BOOK NOW BUTTON ── */
+/* ΓöÇΓöÇ BOOK NOW BUTTON ΓöÇΓöÇ */
 .fd-book-btn {
   display: block;
   width: 100%;
@@ -595,7 +595,7 @@
 .fd-login-hint a { color: #667eea; font-weight: 600; text-decoration: none; }
 .fd-login-hint a:hover { text-decoration: underline; }
 
-/* ── STICKY MOBILE BAR ── */
+/* ΓöÇΓöÇ STICKY MOBILE BAR ΓöÇΓöÇ */
 .fd-sticky-bar {
   display: none;
   position: fixed;
@@ -647,7 +647,7 @@
   box-shadow: 0 8px 22px rgba(102,126,234,0.5);
 }
 
-/* ── EXPERIENCES PANEL & WEATHER WIDGET ── */
+/* ΓöÇΓöÇ EXPERIENCES PANEL & WEATHER WIDGET ΓöÇΓöÇ */
 .fd-exp-panel {
   display: flex;
   flex-direction: column;
@@ -696,7 +696,7 @@
   font-weight: 800;
 }
 
-/* ── DAY IN THE LIFE TIMELINE ── */
+/* ΓöÇΓöÇ DAY IN THE LIFE TIMELINE ΓöÇΓöÇ */
 .fd-timeline-subtitle,
 .fd-packing-subtitle {
   font-size: 0.9rem;
@@ -779,7 +779,7 @@
   margin: 0;
 }
 
-/* ── PACKING ASSISTANT ── */
+/* ΓöÇΓöÇ PACKING ASSISTANT ΓöÇΓöÇ */
 .fd-progress-container {
   display: flex;
   align-items: center;
@@ -864,7 +864,7 @@
   opacity: 0.85;
 }
 
-/* ── CALCULATOR INPUTS & BOOKING CARD ── */
+/* ΓöÇΓöÇ CALCULATOR INPUTS & BOOKING CARD ΓöÇΓöÇ */
 .fd-calculator-inputs {
   display: flex;
   flex-direction: column;
@@ -954,7 +954,7 @@
   color: #4a5568;
 }
 
-/* ── BILL RECEIPT ── */
+/* ΓöÇΓöÇ BILL RECEIPT ΓöÇΓöÇ */
 .fd-bill-breakdown {
   display: flex;
   flex-direction: column;
@@ -1027,7 +1027,7 @@
   border-radius: 10px;
 }
 
-/* ══ RESPONSIVE ══ */
+/* ΓòÉΓòÉ RESPONSIVE ΓòÉΓòÉ */
 @media (max-width: 980px) {
   .fd-main {
     grid-template-columns: 1fr;
@@ -1052,135 +1052,165 @@
   .fd-hero img { height: 240px; }
   .fd-hero-overlay h1 { font-size: 1.5rem; }
 }
-/ *   R e v i e w   S t y l e s   * / 
- . f d - r e v i e w - f o r m   { 
-     b a c k g r o u n d :   v a r ( - - b g - c a r d ,   # f f f f f f ) ; 
-     p a d d i n g :   1 . 5 r e m ; 
-     b o r d e r - r a d i u s :   1 2 p x ; 
-     b o x - s h a d o w :   0   4 p x   1 2 p x   r g b a ( 0 , 0 , 0 , 0 . 0 5 ) ; 
-     m a r g i n - b o t t o m :   2 r e m ; 
-     b o r d e r :   1 p x   s o l i d   v a r ( - - b o r d e r - l i g h t ,   # e a e a e a ) ; 
- } 
- . f d - r e v i e w - f o r m   h 3   { 
-     m a r g i n - t o p :   0 ; 
-     m a r g i n - b o t t o m :   1 r e m ; 
-     f o n t - s i z e :   1 . 2 r e m ; 
-     c o l o r :   v a r ( - - t e x t - d a r k ,   # 2 c 3 e 5 0 ) ; 
- } 
- . f d - r e v i e w - m s g   { 
-     c o l o r :   # 2 7 a e 6 0 ; 
-     b a c k g r o u n d :   # e 8 f 8 f 5 ; 
-     p a d d i n g :   0 . 5 r e m ; 
-     b o r d e r - r a d i u s :   4 p x ; 
-     m a r g i n - b o t t o m :   1 r e m ; 
-     f o n t - s i z e :   0 . 9 r e m ; 
- } 
- . f d - r e v i e w - i n p u t - g r o u p   { 
-     m a r g i n - b o t t o m :   1 r e m ; 
-     d i s p l a y :   f l e x ; 
-     f l e x - d i r e c t i o n :   c o l u m n ; 
- } 
- . f d - r e v i e w - i n p u t - g r o u p   l a b e l   { 
-     f o n t - w e i g h t :   6 0 0 ; 
-     m a r g i n - b o t t o m :   0 . 5 r e m ; 
-     c o l o r :   v a r ( - - t e x t - d a r k ,   # 3 3 3 ) ; 
- } 
- . f d - r e v i e w - i n p u t - g r o u p   s e l e c t , 
- . f d - r e v i e w - i n p u t - g r o u p   t e x t a r e a   { 
-     p a d d i n g :   0 . 7 5 r e m ; 
-     b o r d e r :   1 p x   s o l i d   # c c c ; 
-     b o r d e r - r a d i u s :   8 p x ; 
-     f o n t - s i z e :   1 r e m ; 
-     f o n t - f a m i l y :   i n h e r i t ; 
- } 
- . f d - r e v i e w - i n p u t - g r o u p   t e x t a r e a   { 
-     r e s i z e :   v e r t i c a l ; 
- } 
- . f d - b t n - s u b m i t - r e v i e w   { 
-     b a c k g r o u n d :   v a r ( - - p r i m a r y - c o l o r ,   # 2 7 a e 6 0 ) ; 
-     c o l o r :   # f f f ; 
-     b o r d e r :   n o n e ; 
-     p a d d i n g :   0 . 7 5 r e m   1 . 5 r e m ; 
-     f o n t - s i z e :   1 r e m ; 
-     f o n t - w e i g h t :   6 0 0 ; 
-     b o r d e r - r a d i u s :   8 p x ; 
-     c u r s o r :   p o i n t e r ; 
-     t r a n s i t i o n :   o p a c i t y   0 . 3 s   e a s e ; 
- } 
- . f d - b t n - s u b m i t - r e v i e w : d i s a b l e d   { 
-     o p a c i t y :   0 . 7 ; 
-     c u r s o r :   n o t - a l l o w e d ; 
- } 
- . f d - b t n - s u b m i t - r e v i e w : h o v e r : n o t ( : d i s a b l e d )   { 
-     o p a c i t y :   0 . 9 ; 
- } 
- . f d - l o g i n - t o - r e v i e w   { 
-     f o n t - s t y l e :   i t a l i c ; 
-     c o l o r :   # 6 6 6 ; 
- } 
- . f d - l o g i n - t o - r e v i e w   a   { 
-     c o l o r :   v a r ( - - p r i m a r y - c o l o r ,   # 2 7 a e 6 0 ) ; 
-     t e x t - d e c o r a t i o n :   u n d e r l i n e ; 
- } 
- 
- . f d - r e v i e w s - l i s t   { 
-     d i s p l a y :   f l e x ; 
-     f l e x - d i r e c t i o n :   c o l u m n ; 
-     g a p :   1 . 5 r e m ; 
- } 
- . f d - r e v i e w - c a r d   { 
-     b a c k g r o u n d :   # f f f ; 
-     b o r d e r :   1 p x   s o l i d   # e a e a e a ; 
-     b o r d e r - r a d i u s :   1 2 p x ; 
-     p a d d i n g :   1 . 5 r e m ; 
- } 
- . f d - r e v i e w - h e a d e r   { 
-     d i s p l a y :   f l e x ; 
-     a l i g n - i t e m s :   c e n t e r ; 
-     g a p :   1 r e m ; 
-     m a r g i n - b o t t o m :   1 r e m ; 
- } 
- . f d - r e v i e w - a v a t a r   { 
-     w i d t h :   4 0 p x ; 
-     h e i g h t :   4 0 p x ; 
-     b o r d e r - r a d i u s :   5 0 % ; 
-     b a c k g r o u n d :   # 3 4 4 9 5 e ; 
-     c o l o r :   # f f f ; 
-     d i s p l a y :   f l e x ; 
-     a l i g n - i t e m s :   c e n t e r ; 
-     j u s t i f y - c o n t e n t :   c e n t e r ; 
-     f o n t - w e i g h t :   b o l d ; 
-     f o n t - s i z e :   1 . 2 r e m ; 
- } 
- . f d - r e v i e w - m e t a   { 
-     f l e x :   1 ; 
-     d i s p l a y :   f l e x ; 
-     f l e x - d i r e c t i o n :   c o l u m n ; 
- } 
- . f d - r e v i e w - m e t a   s t r o n g   { 
-     f o n t - s i z e :   1 . 0 5 r e m ; 
-     c o l o r :   # 2 c 3 e 5 0 ; 
- } 
- . f d - r e v i e w - d a t e   { 
-     f o n t - s i z e :   0 . 8 5 r e m ; 
-     c o l o r :   # 7 f 8 c 8 d ; 
- } 
- . f d - r e v i e w - r a t i n g   { 
-     c o l o r :   # f 1 c 4 0 f ; 
-     f o n t - s i z e :   1 . 2 r e m ; 
- } 
- . f d - r e v i e w - c o m m e n t   { 
-     c o l o r :   # 4 a 4 a 4 a ; 
-     l i n e - h e i g h t :   1 . 6 ; 
- } 
- . f d - e m p t y - r e v i e w s   { 
-     c o l o r :   # 7 f 8 c 8 d ; 
-     f o n t - s t y l e :   i t a l i c ; 
-     t e x t - a l i g n :   c e n t e r ; 
-     p a d d i n g :   2 r e m ; 
-     b a c k g r o u n d :   # f 9 f 9 f 9 ; 
-     b o r d e r - r a d i u s :   8 p x ; 
- } 
- 
- 
- 
+
+.fd-location-card {
+  width: min(100%, 1200px);
+  margin: 1.5rem auto 0;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(45, 55, 72, 0.08);
+}
+
+.fd-location-card h2 {
+  margin: 0 0 0.35rem;
+  color: #1a202c;
+  font-size: 1.15rem;
+}
+
+.fd-location-card p {
+  margin: 0 0 1rem;
+  color: #718096;
+  font-size: 0.92rem;
+}
+
+.fd-location-card iframe {
+  display: block;
+  width: 100%;
+  height: 360px;
+  border: 0;
+  border-radius: 10px;
+}
+/* Review Styles */
+.fd-review-form {
+  background: var(--bg-card, #ffffff);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-light, #eaeaea);
+}
+.fd-review-form h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: var(--text-dark, #2c3e50);
+}
+.fd-review-msg {
+  color: #27ae60;
+  background: #e8f8f5;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.fd-review-input-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+.fd-review-input-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark, #333);
+}
+.fd-review-input-group select,
+.fd-review-input-group textarea {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.fd-review-input-group textarea {
+  resize: vertical;
+}
+.fd-btn-submit-review {
+  background: var(--primary-color, #27ae60);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.fd-btn-submit-review:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.fd-btn-submit-review:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.fd-login-to-review {
+  font-style: italic;
+  color: #666;
+}
+.fd-login-to-review a {
+  color: var(--primary-color, #27ae60);
+  text-decoration: underline;
+}
+
+.fd-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.fd-review-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.fd-review-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.fd-review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #34495e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.fd-review-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.fd-review-meta strong {
+  font-size: 1.05rem;
+  color: #2c3e50;
+}
+.fd-review-date {
+  font-size: 0.85rem;
+  color: #7f8c8d;
+}
+.fd-review-rating {
+  color: #f1c40f;
+  font-size: 1.2rem;
+}
+.fd-review-comment {
+  color: #4a4a4a;
+  line-height: 1.6;
+}
+.fd-empty-reviews {
+  color: #7f8c8d;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+
+

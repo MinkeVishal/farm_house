@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { farmhouseAPI, reviewAPI } from '../api/axiosInstance';
 import ExperienceChatbot from '../components/ExperienceChatbot';
 import BudgetCalculator from '../components/BudgetCalculator';
+import DiscountsSection from '../components/DiscountsSection';
 
 const ROTATING_WORDS = ['Sanctuary', 'Pool Paradise', 'Rustic Cabin', 'Mountain Villa', 'Heritage Palace'];
 
@@ -532,6 +533,9 @@ function Home({ user }) {
           ))}
         </div>
       </section>
+
+      {/* ═══════════ DISCOUNTS & SPECIAL OFFERS ═══════════ */}
+      <DiscountsSection />
 
       {/* ═══════════ FINAL CTA ═══════════ */}
       <section className="final-cta">

@@ -115,3 +115,40 @@ export const reviewAPI = {
       headers: getHeaders(userId),
     }),
 };
+
+// Discount API
+export const discountAPI = {
+  // Public – no auth required
+  getActiveDiscounts: () =>
+    axios.get(`${API_BASE_URL}/discounts/active`),
+
+  // Admin – all discounts
+  getAllDiscounts: (requesterId) =>
+    axios.get(`${API_BASE_URL}/discounts`, {
+      headers: { 'requester-id': requesterId },
+    }),
+
+  // Owner – their own discounts
+  getDiscountsByOwner: (ownerId, requesterId) =>
+    axios.get(`${API_BASE_URL}/discounts/owner/${ownerId}`, {
+      headers: { 'requester-id': requesterId },
+    }),
+
+  // Create (Owner/Admin)
+  createDiscount: (data, requesterId) =>
+    axios.post(`${API_BASE_URL}/discounts`, data, {
+      headers: { 'requester-id': requesterId, 'Content-Type': 'application/json' },
+    }),
+
+  // Update (Creator/Admin)
+  updateDiscount: (id, data, requesterId) =>
+    axios.put(`${API_BASE_URL}/discounts/${id}`, data, {
+      headers: { 'requester-id': requesterId, 'Content-Type': 'application/json' },
+    }),
+
+  // Delete (Creator/Admin)
+  deleteDiscount: (id, requesterId) =>
+    axios.delete(`${API_BASE_URL}/discounts/${id}`, {
+      headers: { 'requester-id': requesterId },
+    }),
+};

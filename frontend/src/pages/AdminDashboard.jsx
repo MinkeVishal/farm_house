@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { userAPI, farmhouseAPI, bookingAPI, paymentAPI } from '../api/axiosInstance';
+import { userAPI, farmhouseAPI, bookingAPI, paymentAPI, discountAPI } from '../api/axiosInstance';
 import './AdminDashboard.css';
 
 // ─── Icon Components ──────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ const icons = {
   filter: 'M22 3H2l8 9.46V19l4 2v-8.54z',
   star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
   check: 'M20 6L9 17l-5-5',
+  tag: 'M20.59 13.41 11 23l-9.59-9.59a2 2 0 0 1 0-2.82L10.59 1.4a2 2 0 0 1 1.41-.59H20a2 2 0 0 1 2 2V11a2 2 0 0 1-.59 1.41zM16 6h.01',
   info: 'M12 8h.01M12 11v5M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',
 };
 
@@ -148,12 +149,86 @@ function AdminDashboard() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [discounts, setDiscounts] = useState([]);
+  const [discountLoading, setDiscountLoading] = useState(false);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [editingDiscount, setEditingDiscount] = useState(null);
+  const [discountForm, setDiscountForm] = useState({
+    title: '', description: '', farmhouseType: 'ALL', farmhouseId: '', discountPercent: '',
+    specialOffer: '', validFrom: '', validTo: '', isActive: true,
+  });
   const [formData, setFormData] = useState({ name: '', location: '', description: '', pricePerDay: '', maxGuests: '', amenities: '', imageUrl: '' });
   const [formLoading, setFormLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
   const toastRef = useRef(0);
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const fetchDiscounts = async () => {
+    setDiscountLoading(true);
+    try {
+      const response = await discountAPI.getAllDiscounts(currentUser.id);
+      setDiscounts(response.data.discounts || []);
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to load discounts', 'error');
+    } finally {
+      setDiscountLoading(false);
+    }
+  };
+
+  const openDiscountModal = (discount = null) => {
+    setEditingDiscount(discount);
+    setDiscountForm(discount ? {
+      title: discount.title || '', description: discount.description || '',
+      farmhouseType: discount.farmhouseType || 'ALL', farmhouseId: discount.farmhouseId ? String(discount.farmhouseId) : '', discountPercent: discount.discountPercent || '',
+      specialOffer: discount.specialOffer || '', validFrom: discount.validFrom || '',
+      validTo: discount.validTo || '', isActive: discount.isActive !== false,
+    } : {
+      title: '', description: '', farmhouseType: 'ALL', farmhouseId: '', discountPercent: '',
+      specialOffer: '', validFrom: '', validTo: '', isActive: true,
+    });
+    setShowDiscountModal(true);
+  };
+
+  const saveDiscount = async (e) => {
+    e.preventDefault();
+    const reqId = currentUser?.id || localStorage.getItem('userId');
+    if (!reqId) {
+      addToast('User session expired. Please log in again.', 'error');
+      return;
+    }
+    try {
+      const payload = {
+        title: discountForm.title,
+        description: discountForm.description,
+        farmhouseType: discountForm.farmhouseType || 'ALL',
+        farmhouseId: discountForm.farmhouseId ? parseInt(discountForm.farmhouseId, 10) : null,
+        discountPercent: parseFloat(discountForm.discountPercent),
+        specialOffer: discountForm.specialOffer,
+        validFrom: discountForm.validFrom ? discountForm.validFrom : null,
+        validTo: discountForm.validTo ? discountForm.validTo : null,
+        isActive: discountForm.isActive !== false,
+      };
+      if (editingDiscount) await discountAPI.updateDiscount(editingDiscount.id, payload, reqId);
+      else await discountAPI.createDiscount(payload, reqId);
+      addToast(editingDiscount ? 'Discount updated successfully' : 'Discount created successfully', 'success');
+      setShowDiscountModal(false);
+      fetchDiscounts();
+    } catch (err) {
+      addToast(err.response?.data?.message || err.message || 'Failed to save discount', 'error');
+    }
+  };
+
+  const removeDiscount = async (id) => {
+    if (!window.confirm('Delete this discount?')) return;
+    try {
+      await discountAPI.deleteDiscount(id, currentUser.id);
+      addToast('Discount deleted');
+      fetchDiscounts();
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to delete discount', 'error');
+    }
+  };
 
   // ── Toast helpers ──
   const addToast = (message, type = 'success') => {
@@ -196,6 +271,7 @@ function AdminDashboard() {
   };
 
   useEffect(() => { fetchData(); }, []);
+  useEffect(() => { if (activeTab === 'discounts') fetchDiscounts(); }, [activeTab]);
 
   // ── Add Farmhouse ──
   const handleAddFarmhouse = async (e) => {
@@ -304,6 +380,7 @@ function AdminDashboard() {
     { key: 'farmhouses', label: 'Farm Houses', icon: icons.farmhouse, count: farmhouses.length },
     { key: 'bookings', label: 'Bookings', icon: icons.bookings, count: stats.totalBookings },
     { key: 'approvals', label: 'Pending', icon: icons.approve, count: stats.pendingApprovals, badge: true },
+    { key: 'discounts', label: 'Discounts', icon: icons.tag, count: discounts.length },
   ];
 
   if (loading) {
@@ -727,6 +804,48 @@ function AdminDashboard() {
             </div>
           )}
 
+          {/* ═══ DISCOUNTS TAB ═══ */}
+          {activeTab === 'discounts' && (
+            <div className="adm-section">
+              <div className="adm-toolbar">
+                <div>
+                  <h3 className="adm-section-heading">Discounts &amp; Special Offers</h3>
+                  <p className="adm-section-copy">Manage offers created by every owner.</p>
+                </div>
+                <button className="adm-btn adm-btn-primary" onClick={() => openDiscountModal()}>
+                  <Icon d={icons.add} size={16} /> Add Discount
+                </button>
+              </div>
+              {discountLoading ? (
+                <div className="adm-table-empty">Loading discounts…</div>
+              ) : discounts.length === 0 ? (
+                <div className="adm-table-empty">No discounts have been created yet.</div>
+              ) : (
+                <div className="adm-table-wrap">
+                  <table className="adm-table">
+                    <thead><tr><th>Offer</th><th>Type</th><th>Discount</th><th>Validity</th><th>Created by</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                      {discounts.map(discount => (
+                        <tr key={discount.id}>
+                          <td><strong>{discount.title}</strong><br /><small>{discount.specialOffer || discount.description || '—'}</small></td>
+                          <td>{(discount.farmhouseType || 'ALL').replaceAll('_', ' ')}</td>
+                          <td><strong>{discount.discountPercent}% OFF</strong></td>
+                          <td>{discount.validFrom || 'Any time'}<br />{discount.validTo ? `to ${discount.validTo}` : ''}</td>
+                          <td>{discount.createdByName || 'Admin'}</td>
+                          <td><span className={`adm-badge ${discount.isActive ? 'adm-status-confirmed' : 'adm-status-cancelled'}`}>{discount.isActive ? 'Active' : 'Inactive'}</span></td>
+                          <td><div className="adm-action-btns">
+                            <button className="adm-btn-sm adm-btn-view" onClick={() => openDiscountModal(discount)}>Edit</button>
+                            <button className="adm-btn-sm adm-btn-danger" onClick={() => removeDiscount(discount.id)}>Delete</button>
+                          </div></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ═══ APPROVALS TAB ═══ */}
           {activeTab === 'approvals' && (
             <div className="adm-section">
@@ -897,6 +1016,27 @@ function AdminDashboard() {
             {selectedBooking.status !== 'CANCELLED' && selectedBooking.status !== 'COMPLETED' && <button className="adm-btn adm-btn-danger adm-booking-cancel" onClick={() => handleBookingStatus(selectedBooking, 'cancel')}><Icon d={icons.close} size={16} /> Cancel booking</button>}
           </div>
         )}
+      </Modal>
+
+      <Modal open={showDiscountModal} onClose={() => setShowDiscountModal(false)} title={editingDiscount ? 'Edit Discount' : 'Create Discount'}>
+        <form onSubmit={saveDiscount} className="adm-form">
+          <div className="adm-form-row">
+            <div className="adm-form-group"><label>Title <span className="req">*</span></label><input required value={discountForm.title} onChange={e => setDiscountForm({ ...discountForm, title: e.target.value })} /></div>
+            <div className="adm-form-group"><label>Target Farmhouse</label><select value={discountForm.farmhouseId} onChange={e => setDiscountForm({ ...discountForm, farmhouseId: e.target.value })}><option value="">All Farmhouses (Category Level)</option>{farmhouses.map(fh => (<option key={fh.id} value={fh.id}>🏡 {fh.name}</option>))}</select></div>
+            <div className="adm-form-group"><label>Farmhouse Type</label><select value={discountForm.farmhouseType} onChange={e => setDiscountForm({ ...discountForm, farmhouseType: e.target.value })}><option value="ALL">All Farmhouses</option><option value="ZEN_RETREAT">Zen Retreat</option><option value="POOL_PARTY">Pool Party</option><option value="ADVENTURE_WOODS">Adventure Woods</option><option value="HERITAGE_PALACE">Heritage Palace</option></select></div>
+          </div>
+          <div className="adm-form-row">
+            <div className="adm-form-group"><label>Discount % <span className="req">*</span></label><input required type="number" min="0.01" max="99.99" step="0.01" value={discountForm.discountPercent} onChange={e => setDiscountForm({ ...discountForm, discountPercent: e.target.value })} /></div>
+            <div className="adm-form-group"><label>Status</label><select value={String(discountForm.isActive)} onChange={e => setDiscountForm({ ...discountForm, isActive: e.target.value === 'true' })}><option value="true">Active</option><option value="false">Inactive</option></select></div>
+          </div>
+          <div className="adm-form-row">
+            <div className="adm-form-group"><label>Valid from</label><input type="date" value={discountForm.validFrom} onChange={e => setDiscountForm({ ...discountForm, validFrom: e.target.value })} /></div>
+            <div className="adm-form-group"><label>Valid to</label><input type="date" value={discountForm.validTo} onChange={e => setDiscountForm({ ...discountForm, validTo: e.target.value })} /></div>
+          </div>
+          <div className="adm-form-group"><label>Special offer</label><input value={discountForm.specialOffer} placeholder="e.g. Free bonfire night + breakfast" onChange={e => setDiscountForm({ ...discountForm, specialOffer: e.target.value })} /></div>
+          <div className="adm-form-group"><label>Description</label><textarea rows={3} value={discountForm.description} onChange={e => setDiscountForm({ ...discountForm, description: e.target.value })} /></div>
+          <div className="adm-form-footer"><button type="button" className="adm-btn adm-btn-ghost" onClick={() => setShowDiscountModal(false)}>Cancel</button><button type="submit" className="adm-btn adm-btn-primary">{editingDiscount ? 'Save Changes' : 'Create Discount'}</button></div>
+        </form>
       </Modal>
 
       {/* ── Confirm Dialog ── */}
