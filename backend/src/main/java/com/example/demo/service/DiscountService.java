@@ -219,9 +219,9 @@ public class DiscountService {
             throw new IllegalArgumentException("Discount title is required");
         }
         if (dto.getDiscountPercent() == null
-                || dto.getDiscountPercent() <= 0
+                || dto.getDiscountPercent() < 0
                 || dto.getDiscountPercent() >= 100) {
-            throw new IllegalArgumentException("Discount must be greater than 0 and less than 100 percent");
+            throw new IllegalArgumentException("Discount must be between 0 and 99 percent");
         }
         if (dto.getValidFrom() != null && dto.getValidTo() != null
                 && dto.getValidFrom().isAfter(dto.getValidTo())) {
