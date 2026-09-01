@@ -109,6 +109,77 @@
   margin: 0;
 }
 
+/* ── CATEGORY TYPE TABS ── */
+.fhl-category-tabs-wrap {
+  max-width: 1280px;
+  margin: -2.2rem auto 1rem;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 12;
+}
+
+.fhl-category-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.fhl-cat-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 30px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fhl-cat-tab:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+.fhl-cat-tab.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  transform: translateY(-2px) scale(1.02);
+}
+.fhl-cat-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── Card Type Pill Badge ── */
+.fhl-type-pill-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* ── FILTER BAR ── */
 .fhl-filter-bar {
   display: flex;
@@ -116,7 +187,7 @@
   gap: 1rem;
   align-items: flex-end;
   max-width: 1280px;
-  margin: -1.75rem auto 0;
+  margin: 0.5rem auto 0;
   padding: 1.75rem 2rem;
   background: white;
   border-radius: 20px;

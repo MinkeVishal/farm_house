@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════
-   DISCOUNTS SECTION — Homepage
+   DISCOUNTS SECTION — Clean Farmhouse Type & % Discount Cards
    ═══════════════════════════════════════════════════════ */
 
 .discounts-section {
   position: relative;
-  padding: 6rem 2rem;
-  background: #f8f4ff;
+  padding: 5rem 2rem;
+  background: linear-gradient(180deg, #faf7ff 0%, #f4ebff 50%, #fbf4f9 100%);
   overflow: hidden;
 }
 
@@ -13,7 +13,7 @@
 .ds-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(90px);
   opacity: 0.3;
   pointer-events: none;
 }
@@ -32,18 +32,57 @@
   right: -80px;
 }
 
-/* Section chip override */
+/* Header Top */
+.ds-header-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+/* Section chip */
 .ds-chip {
   background: linear-gradient(135deg, #7c3aed, #db2777) !important;
   color: #fff !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  padding: 0.4rem 1rem !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 15px rgba(219, 39, 119, 0.25) !important;
 }
 
-/* Owner / Admin Management Quick Button */
+/* Admin / Owner Control Bar */
+.ds-admin-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ds-create-discount-btn {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border: none;
+  color: #ffffff;
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+}
+.ds-create-discount-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
 .ds-owner-manage-btn {
   background: rgba(124, 58, 237, 0.12);
   border: 1px solid rgba(124, 58, 237, 0.3);
   color: #6d28d9;
-  padding: 0.35rem 0.85rem;
+  padding: 0.4rem 0.9rem;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -56,322 +95,469 @@
   transform: translateY(-2px);
 }
 
-/* ── Interactive Date Filter ───────────────────────────── */
-.ds-filter-container {
-  max-width: 700px;
-  margin: 0 auto 2.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.ds-filter-box {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: #ffffff;
-  padding: 0.75rem 1.4rem;
-  border-radius: 50px;
-  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.08);
-  border: 1px solid rgba(124, 58, 237, 0.15);
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.ds-filter-icon {
-  font-size: 1.2rem;
-}
-
-.ds-filter-label {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #334155;
-}
-
-.ds-date-picker {
-  padding: 0.45rem 0.9rem;
-  border-radius: 20px;
-  border: 1px solid #cbd5e1;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1e293b;
-  outline: none;
-  background: #f8fafc;
-  cursor: pointer;
-}
-.ds-date-picker:focus {
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
-}
-
-.ds-clear-date-btn {
-  background: #f1f5f9;
-  border: none;
-  color: #64748b;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.ds-clear-date-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.ds-filter-status {
-  font-size: 0.88rem;
-  color: #64748b;
-}
-
+/* Empty state */
 .ds-no-deals {
   text-align: center;
   padding: 3rem 1.5rem;
   background: #ffffff;
-  border-radius: 20px;
-  max-width: 500px;
-  margin: 0 auto 2.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  max-width: 520px;
+  margin: 0 auto 2rem;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 .ds-no-deals span {
   font-size: 2.5rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+.ds-no-deals h3 {
+  font-size: 1.25rem;
+  color: #1e293b;
+  margin: 0 0 0.5rem;
 }
 .ds-no-deals p {
   color: #64748b;
-  margin: 0.75rem 0 1.25rem;
+  font-size: 0.92rem;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+.ds-cta-btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #7c3aed;
+  color: #ffffff;
+  border-radius: 30px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ds-cta-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-2px);
 }
 
-/* ── Grid ─────────────────────────────────────────────── */
+/* ── Grid of Farmhouse Type Discount Cards ───────────── */
 .ds-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 2rem;
   max-width: 1200px;
-  margin: 0 auto 2.5rem;
+  margin: 2.5rem auto 1rem;
 }
 
-/* ── Card ─────────────────────────────────────────────── */
-.ds-card {
+/* ── Farmhouse Type Discount Card ────────────────────── */
+.ds-type-card {
   position: relative;
-  border-radius: 22px;
-  padding: 2rem 1.75rem 1.5rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+  border-radius: 24px;
+  padding: 2.2rem 1.8rem 1.8rem;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.14);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  justify-content: space-between;
+  gap: 1.25rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   overflow: hidden;
   color: #ffffff;
+  min-height: 230px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
-.ds-card::before {
+
+.ds-type-card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.12) 100%);
   pointer-events: none;
 }
-.ds-card:hover {
-  transform: translateY(-6px);
+
+.ds-type-card:hover {
+  transform: translateY(-8px) scale(1.02);
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
 }
 
-/* Discount badge (top-right corner) */
+/* Percentage Discount Badge (Top Right) */
 .ds-badge {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  padding: 0.4rem 0.75rem;
+  top: 18px;
+  right: 18px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  padding: 0.5rem 0.9rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  z-index: 2;
 }
 .ds-badge-percent {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 900;
-  color: #fff;
+  color: #ffffff;
   letter-spacing: -1px;
 }
 .ds-badge-off {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fde047;
+  letter-spacing: 2px;
+  margin-top: 3px;
+}
+
+/* 0% No Discount Badge Style */
+.ds-badge.ds-badge-zero {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.ds-badge.ds-badge-zero .ds-badge-off {
+  color: #cbd5e1;
   letter-spacing: 1px;
+  font-size: 0.65rem;
 }
 
-/* Card header — emoji + type + farmhouse tag */
-.ds-card-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-.ds-type-emoji {
-  font-size: 2rem;
-  line-height: 1;
-}
-.ds-type-label {
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.9);
-}
-.ds-farmhouse-tag {
-  font-size: 0.92rem;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.22);
-  padding: 0.2rem 0.6rem;
-  border-radius: 8px;
-  margin-top: 0.25rem;
-  backdrop-filter: blur(4px);
-  display: inline-block;
-}
-
-/* Card body */
-.ds-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  flex: 1;
-}
-.ds-title {
-  font-size: 1.3rem;
-  font-weight: 800;
-  margin: 0;
-  line-height: 1.3;
-}
-.ds-desc {
-  font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.92);
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Special offer box */
-.ds-offer-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-.ds-offer-icon {
-  font-size: 1.05rem;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.ds-offer-text {
-  font-size: 0.88rem;
+.ds-offer-tag.zero-tag {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.35);
   font-weight: 600;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  opacity: 0.9;
 }
 
-/* Validity & Countdown */
-.ds-validity {
+/* Presets Row */
+.ds-presets-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.ds-preset-chip {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ds-preset-chip:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+.ds-preset-chip.active {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
+}
+.ds-preset-chip.active.zero {
+  background: #475569;
+  color: #ffffff;
+  border-color: #475569;
+}
+
+/* Admin Quick Edit & Delete */
+.ds-card-admin-actions {
+  position: absolute;
+  top: 18px;
+  left: 18px;
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.84rem;
-  color: rgba(255, 255, 255, 0.95);
+  z-index: 3;
+}
+.ds-mini-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+.ds-mini-btn:hover {
+  background: #ffffff;
+  color: #000;
+}
+.ds-mini-btn.delete:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+/* Card Header — Emoji + Farmhouse Type */
+.ds-type-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.8rem;
+  padding-right: 85px; /* space for badge */
+  position: relative;
+  z-index: 1;
+}
+
+.ds-type-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+}
+
+.ds-type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ds-type-name {
+  font-size: 1.45rem;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.2;
+  color: #ffffff;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+.ds-type-tagline {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
 }
-.ds-clock { font-size: 0.95rem; }
 
-.ds-countdown-badge {
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: 20px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  align-self: flex-start;
-  letter-spacing: 0.3px;
+/* Specific Farmhouse Tag */
+.ds-specific-farmhouse {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+  position: relative;
+  z-index: 1;
 }
 
-/* Interactive Voucher Button */
-.ds-voucher-btn {
+/* Special Perk */
+.ds-offer-tag {
   background: rgba(255, 255, 255, 0.25);
-  border: 1px dashed rgba(255, 255, 255, 0.6);
-  color: #ffffff;
-  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 0.45rem 0.8rem;
   border-radius: 12px;
   font-size: 0.82rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 0.25rem;
-  text-align: center;
-}
-.ds-voucher-btn:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-1px);
-}
-.ds-voucher-btn.copied {
-  background: #22c55e;
-  border-color: #22c55e;
   color: #ffffff;
+  backdrop-filter: blur(6px);
+  position: relative;
+  z-index: 1;
 }
 
-/* Footer & CTA */
-.ds-card-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Card Footer & CTA Button */
+.ds-type-card-footer {
   margin-top: auto;
+  position: relative;
+  z-index: 1;
 }
 
-.ds-cta-btn {
-  display: inline-block;
-  padding: 0.7rem 1.4rem;
+.ds-type-book-btn {
+  display: block;
+  text-align: center;
+  padding: 0.85rem 1.4rem;
   background: #ffffff;
   color: #0f172a;
   border-radius: 30px;
-  font-weight: 800;
-  font-size: 0.88rem;
+  font-weight: 900;
+  font-size: 0.92rem;
   text-decoration: none;
-  text-align: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.ds-cta-btn:hover {
+.ds-type-book-btn:hover {
   background: #f8fafc;
   transform: scale(1.04);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  color: #000;
 }
 
-.ds-creator-tag {
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.75);
-  text-align: right;
+/* ═══════════════════════════════════════════════════════
+   OWNER / ADMIN QUICK DISCOUNT MODAL
+   ═══════════════════════════════════════════════════════ */
+.ds-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
 }
 
-/* Footer note */
-.ds-footer-note {
-  text-align: center;
+.ds-modal-content {
+  background: #ffffff;
+  border-radius: 24px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: dsModalFade 0.25s ease-out;
+}
+
+@keyframes dsModalFade {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.ds-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.75rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.ds-modal-header h3 {
+  font-size: 1.15rem;
+  color: #0f172a;
+  margin: 0;
+  font-weight: 800;
+}
+.ds-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
   color: #64748b;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+}
+.ds-modal-close:hover {
+  color: #0f172a;
+}
+
+.ds-modal-form {
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.ds-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ds-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.ds-form-field label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #334155;
+}
+.ds-form-field input,
+.ds-form-field select {
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
   font-size: 0.88rem;
+  outline: none;
+  font-family: inherit;
+}
+.ds-form-field input:focus,
+.ds-form-field select:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.ds-percent-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ds-percent-input-wrap input {
+  width: 100%;
+  padding-right: 4.5rem;
+}
+.ds-percent-symbol {
+  position: absolute;
+  right: 12px;
+  font-weight: 800;
+  color: #7c3aed;
+  font-size: 0.88rem;
+  pointer-events: none;
+}
+
+.ds-form-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.ds-form-alert.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.ds-form-alert.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.ds-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.ds-btn-cancel {
+  background: #f1f5f9;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+}
+.ds-btn-cancel:hover {
+  background: #e2e8f0;
+}
+.ds-btn-submit {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+}
+.ds-btn-submit:hover {
+  transform: translateY(-1px);
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .ds-grid {
     grid-template-columns: 1fr;
   }
   .discounts-section {
-    padding: 4rem 1.25rem;
+    padding: 3.5rem 1.25rem;
   }
-  .ds-filter-box {
-    flex-direction: column;
-    align-items: stretch;
-    border-radius: 20px;
+  .ds-form-row {
+    grid-template-columns: 1fr;
   }
 }
+
+
+

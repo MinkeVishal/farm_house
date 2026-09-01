@@ -19,6 +19,7 @@ function Navbar({ user, onLogout }) {
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/about">About</Link>
           <Link to="/farmhouses" className="nav-link">Farm Houses</Link>
+          <a href="/#discounts" className="nav-link" style={{ fontWeight: '700', color: '#e11d48' }}>🔥 Deals</a>
           
           {user ? (
             <>

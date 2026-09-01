@@ -271,6 +271,9 @@ function Home({ user }) {
             <Link to="/farmhouses" className="btn-lux-primary">
               Browse All Estates →
             </Link>
+            <a href="#discounts" className="btn-lux-outline">
+              🔥 Special Discounts
+            </a>
             {!user && (
               <Link to="/register" className="btn-lux-outline">
                 Create Free Account
@@ -404,6 +407,9 @@ function Home({ user }) {
         )}
       </section>
 
+      {/* ═══════════ DISCOUNTS & SPECIAL OFFERS ═══════════ */}
+      <DiscountsSection />
+
       {/* ═══════════ BUDGET ESTIMATOR ═══════════ */}
       <section className="budget-section">
         <div className="section-intro light">
@@ -533,9 +539,6 @@ function Home({ user }) {
           ))}
         </div>
       </section>
-
-      {/* ═══════════ DISCOUNTS & SPECIAL OFFERS ═══════════ */}
-      <DiscountsSection />
 
       {/* ═══════════ FINAL CTA ═══════════ */}
       <section className="final-cta">

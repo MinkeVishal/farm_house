@@ -1,9 +1,56 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { farmhouseAPI } from '../api/axiosInstance';
 import './FarmHouseList.css';
 
 const PAGE_SIZE = 6;
+
+// Farmhouse Type Configurations
+export const TYPE_CONFIG = {
+  POOL_PARTY: {
+    emoji: '🎉',
+    label: 'Pool Party',
+    color: '#ec4899',
+    keywords: ['pool', 'party', 'dj', 'lawn', 'celebrat', 'club', 'cocktail', 'beach', 'villa'],
+  },
+  ZEN_RETREAT: {
+    emoji: '🧘',
+    label: 'Zen Retreat',
+    color: '#10b981',
+    keywords: ['zen', 'riverside', 'cottage', 'quiet', 'peace', 'mountain', 'nature', 'himalayan', 'yoga', 'sanctuary'],
+  },
+  ADVENTURE_WOODS: {
+    emoji: '⛰️',
+    label: 'Adventure Woods',
+    color: '#059669',
+    keywords: ['adventure', 'forest', 'woods', 'treehouse', 'camp', 'trek', 'kayak', 'bonfire', 'safari', 'chalet', 'dune'],
+  },
+  HERITAGE_PALACE: {
+    emoji: '🏰',
+    label: 'Heritage Palace',
+    color: '#ea580c',
+    keywords: ['heritage', 'palace', 'haveli', 'resort', 'royal', 'estate', 'vineyard', 'bungalow', 'plantation', 'houseboat'],
+  },
+};
+
+export function getFarmHouseType(fh) {
+  if (fh.type && TYPE_CONFIG[fh.type]) return fh.type;
+  if (fh.farmhouseType && TYPE_CONFIG[fh.farmhouseType]) return fh.farmhouseType;
+
+  const text = `${fh.name || ''} ${fh.description || ''} ${fh.amenities || ''} ${fh.location || ''}`.toLowerCase();
+
+  for (const [tKey, config] of Object.entries(TYPE_CONFIG)) {
+    for (const kw of config.keywords) {
+      if (text.includes(kw)) {
+        return tKey;
+      }
+    }
+  }
+
+  const idNum = Number(fh.id) || 1;
+  const keys = ['POOL_PARTY', 'ZEN_RETREAT', 'ADVENTURE_WOODS', 'HERITAGE_PALACE'];
+  return keys[idNum % keys.length];
+}
 
 // Demo farmhouses shown when backend is offline
 const DEMO_FARMHOUSES = [
@@ -22,8 +69,12 @@ const DEMO_FARMHOUSES = [
 ];
 
 function FarmHouseList({ user }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeType = searchParams.get('type') || 'ALL';
+
   const [allFarmhouses, setAllFarmhouses] = useState([]);
   const [displayList, setDisplayList] = useState([]);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -38,7 +89,44 @@ function FarmHouseList({ user }) {
 
   const gridRef = useRef(null);
 
-  // Fetch all farmhouses once, then paginate client-side
+  const paginate = useCallback((list, page) => {
+    const total = Math.ceil(list.length / PAGE_SIZE);
+    setTotalPages(total);
+    setCurrentPage(page);
+    setFilteredCount(list.length);
+    const start = page * PAGE_SIZE;
+    setDisplayList(list.slice(start, start + PAGE_SIZE));
+  }, []);
+
+  const applyFilters = useCallback((type, loc, minP, maxP, list = allFarmhouses) => {
+    let result = list;
+
+    // 1. Filter by Farmhouse Type
+    if (type && type !== 'ALL') {
+      result = result.filter((fh) => getFarmHouseType(fh) === type);
+    }
+
+    // 2. Filter by Location / Name
+    if (loc && loc.trim()) {
+      const q = loc.trim().toLowerCase();
+      result = result.filter(
+        (fh) => fh.location?.toLowerCase().includes(q) || fh.name?.toLowerCase().includes(q)
+      );
+    }
+
+    // 3. Filter by Price Range
+    if (minP || maxP) {
+      const min = parseFloat(minP) || 0;
+      const max = parseFloat(maxP) || Infinity;
+      result = result.filter((fh) => fh.pricePerDay >= min && fh.pricePerDay <= max);
+    }
+
+    const hasFilter = type !== 'ALL' || !!loc.trim() || !!minP || !!maxP;
+    setIsFiltered(hasFilter);
+    paginate(result, 0);
+  }, [allFarmhouses, paginate]);
+
+  // Fetch all farmhouses once, then apply query param filter
   useEffect(() => {
     fetchFarmhouses();
   }, []);
@@ -48,34 +136,53 @@ function FarmHouseList({ user }) {
     setError('');
     try {
       const response = await farmhouseAPI.getAllFarmHouses(0, 100);
+      let data = DEMO_FARMHOUSES;
       if (response.data.success && response.data.farmhouses?.length > 0) {
-        setAllFarmhouses(response.data.farmhouses);
-        paginate(response.data.farmhouses, 0);
-      } else {
-        // Use demo data when backend returns empty
-        setAllFarmhouses(DEMO_FARMHOUSES);
-        paginate(DEMO_FARMHOUSES, 0);
+        data = response.data.farmhouses;
       }
+      setAllFarmhouses(data);
+      applyFilters(activeType, searchLocation, minPrice, maxPrice, data);
     } catch (err) {
-      // Backend offline — use demo data
       setAllFarmhouses(DEMO_FARMHOUSES);
-      paginate(DEMO_FARMHOUSES, 0);
+      applyFilters(activeType, searchLocation, minPrice, maxPrice, DEMO_FARMHOUSES);
     } finally {
       setLoading(false);
     }
   };
 
-  const paginate = (list, page) => {
-    const total = Math.ceil(list.length / PAGE_SIZE);
-    setTotalPages(total);
-    setCurrentPage(page);
-    const start = page * PAGE_SIZE;
-    setDisplayList(list.slice(start, start + PAGE_SIZE));
+  // Re-run filter when URL type parameter changes
+  useEffect(() => {
+    if (allFarmhouses.length > 0) {
+      applyFilters(activeType, searchLocation, minPrice, maxPrice, allFarmhouses);
+    }
+  }, [activeType, allFarmhouses, applyFilters]);
+
+  const handleTypeSelect = (typeKey) => {
+    if (typeKey === 'ALL') {
+      searchParams.delete('type');
+      setSearchParams(searchParams);
+    } else {
+      setSearchParams({ type: typeKey });
+    }
   };
 
   const handlePageChange = (newPage) => {
-    paginate(allFarmhouses, newPage);
-    // Smooth scroll to top of grid
+    let result = allFarmhouses;
+    if (activeType && activeType !== 'ALL') {
+      result = result.filter((fh) => getFarmHouseType(fh) === activeType);
+    }
+    if (searchLocation.trim()) {
+      const q = searchLocation.trim().toLowerCase();
+      result = result.filter(
+        (fh) => fh.location?.toLowerCase().includes(q) || fh.name?.toLowerCase().includes(q)
+      );
+    }
+    if (minPrice || maxPrice) {
+      const min = parseFloat(minPrice) || 0;
+      const max = parseFloat(maxPrice) || Infinity;
+      result = result.filter((fh) => fh.pricePerDay >= min && fh.pricePerDay <= max);
+    }
+    paginate(result, newPage);
     if (gridRef.current) {
       gridRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -83,36 +190,20 @@ function FarmHouseList({ user }) {
 
   const handleSearchByLocation = (e) => {
     e.preventDefault();
-    const query = searchLocation.trim().toLowerCase();
-    if (!query) {
-      setIsFiltered(false);
-      paginate(allFarmhouses, 0);
-      return;
-    }
-    const filtered = allFarmhouses.filter(fh =>
-      fh.location?.toLowerCase().includes(query) ||
-      fh.name?.toLowerCase().includes(query)
-    );
-    setIsFiltered(true);
-    paginate(filtered.length > 0 ? filtered : [], 0);
+    applyFilters(activeType, searchLocation, minPrice, maxPrice, allFarmhouses);
   };
 
   const handleSearchByPrice = (e) => {
     e.preventDefault();
-    if (!minPrice && !maxPrice) return;
-    const min = parseFloat(minPrice) || 0;
-    const max = parseFloat(maxPrice) || Infinity;
-    const filtered = allFarmhouses.filter(fh =>
-      fh.pricePerDay >= min && fh.pricePerDay <= max
-    );
-    setIsFiltered(true);
-    paginate(filtered.length > 0 ? filtered : [], 0);
+    applyFilters(activeType, searchLocation, minPrice, maxPrice, allFarmhouses);
   };
 
   const handleClearFilters = () => {
     setSearchLocation('');
     setMinPrice('');
     setMaxPrice('');
+    searchParams.delete('type');
+    setSearchParams(searchParams);
     setIsFiltered(false);
     paginate(allFarmhouses, 0);
   };
@@ -139,9 +230,57 @@ function FarmHouseList({ user }) {
         <div className="fhl-hero-blob b1" />
         <div className="fhl-hero-blob b2" />
         <div className="fhl-hero-content">
-          <span className="fhl-hero-chip">🏡 ALL ESTATES</span>
-          <h1>Find Your Perfect<br />Farmhouse Escape</h1>
-          <p>Hand-picked luxury properties across India — private pools, bonfires, and breathtaking views await</p>
+          <span className="fhl-hero-chip">
+            {activeType !== 'ALL' && TYPE_CONFIG[activeType]
+              ? `${TYPE_CONFIG[activeType].emoji} ${TYPE_CONFIG[activeType].label.toUpperCase()} ESTATES`
+              : '🏡 ALL ESTATES'}
+          </span>
+          <h1>
+            {activeType !== 'ALL' && TYPE_CONFIG[activeType] ? (
+              <>
+                {TYPE_CONFIG[activeType].emoji} {TYPE_CONFIG[activeType].label}
+                <br />
+                Farmhouse Collection
+              </>
+            ) : (
+              <>
+                Find Your Perfect<br />Farmhouse Escape
+              </>
+            )}
+          </h1>
+          <p>
+            {activeType !== 'ALL' && TYPE_CONFIG[activeType]
+              ? `Showing curated ${TYPE_CONFIG[activeType].label} farmhouses. Book now with exclusive category discount!`
+              : 'Hand-picked luxury properties across India — private pools, bonfires, and breathtaking views await'}
+          </p>
+        </div>
+      </div>
+
+      {/* ── CATEGORY TYPE TABS ── */}
+      <div className="fhl-category-tabs-wrap">
+        <div className="fhl-category-tabs">
+          <button
+            type="button"
+            className={`fhl-cat-tab ${activeType === 'ALL' ? 'active' : ''}`}
+            onClick={() => handleTypeSelect('ALL')}
+          >
+            <span className="fhl-cat-icon">🌟</span>
+            <span>All Types ({allFarmhouses.length})</span>
+          </button>
+          {Object.entries(TYPE_CONFIG).map(([tKey, config]) => {
+            const count = allFarmhouses.filter((fh) => getFarmHouseType(fh) === tKey).length;
+            return (
+              <button
+                key={tKey}
+                type="button"
+                className={`fhl-cat-tab ${activeType === tKey ? 'active' : ''}`}
+                onClick={() => handleTypeSelect(tKey)}
+              >
+                <span className="fhl-cat-icon">{config.emoji}</span>
+                <span>{config.label} ({count})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -184,7 +323,7 @@ function FarmHouseList({ user }) {
 
         <div className="fhl-filter-actions">
           {isFiltered && (
-            <button onClick={handleClearFilters} className="fhl-btn-clear">✕ Clear Filters</button>
+            <button type="button" onClick={handleClearFilters} className="fhl-btn-clear">✕ Clear Filters</button>
           )}
           {user?.role === 'OWNER' && (
             <Link to="/create-estate" className="fhl-btn-add">+ Add Estate</Link>
@@ -196,7 +335,8 @@ function FarmHouseList({ user }) {
       {!loading && (
         <div className="fhl-results-info" ref={gridRef}>
           <span>
-            Showing <strong>{displayList.length}</strong> of <strong>{allFarmhouses.length}</strong> estates
+            Showing <strong>{displayList.length}</strong> of <strong>{filteredCount}</strong>{' '}
+            {activeType !== 'ALL' && TYPE_CONFIG[activeType] ? `${TYPE_CONFIG[activeType].label} ` : ''}estates
             {isFiltered && ' (filtered)'}
           </span>
           <span className="fhl-page-badge">Page {currentPage + 1} of {totalPages || 1}</span>
@@ -208,49 +348,57 @@ function FarmHouseList({ user }) {
       {/* ── FARMHOUSE GRID ── */}
       {displayList.length > 0 ? (
         <div className="fhl-grid">
-          {displayList.map((fh, idx) => (
-            <div
-              key={fh.id}
-              className="fhl-card"
-              style={{ animationDelay: `${idx * 0.06}s` }}
-            >
-              <div className="fhl-card-img-wrap">
-                <img src={getImageUrl(fh)} alt={fh.name} className="fhl-card-img" />
-                <div className="fhl-price-badge">
-                  ₹{fh.pricePerDay?.toLocaleString()}
-                  <small>/night</small>
+          {displayList.map((fh, idx) => {
+            const fhType = getFarmHouseType(fh);
+            const typeConfig = TYPE_CONFIG[fhType] || TYPE_CONFIG.POOL_PARTY;
+
+            return (
+              <div
+                key={fh.id}
+                className="fhl-card"
+                style={{ animationDelay: `${idx * 0.06}s` }}
+              >
+                <div className="fhl-card-img-wrap">
+                  <img src={getImageUrl(fh)} alt={fh.name} className="fhl-card-img" />
+                  <div className="fhl-price-badge">
+                    ₹{fh.pricePerDay?.toLocaleString()}
+                    <small>/night</small>
+                  </div>
+                  <div className="fhl-loc-badge">📍 {fh.location}</div>
+                  <div className="fhl-type-pill-badge">
+                    {typeConfig.emoji} {typeConfig.label}
+                  </div>
+                  {fh.available === false && (
+                    <div className="fhl-unavail-badge">❌ Unavailable</div>
+                  )}
                 </div>
-                <div className="fhl-loc-badge">📍 {fh.location}</div>
-                {fh.available === false && (
-                  <div className="fhl-unavail-badge">❌ Unavailable</div>
-                )}
+
+                <div className="fhl-card-body">
+                  <h3 className="fhl-card-title">{fh.name}</h3>
+                  <p className="fhl-card-desc">{fh.description?.substring(0, 110)}…</p>
+
+                  <div className="fhl-card-meta">
+                    <span>🛏️ {fh.bedrooms || 3} Beds</span>
+                    <span>🚿 {fh.bathrooms || 2} Baths</span>
+                    <span>👥 {fh.maxGuests || 4} Guests</span>
+                  </div>
+
+                  <div className="fhl-card-footer">
+                    <Link to={`/farmhouses/${fh.id}`} className="fhl-view-btn">
+                      View Details →
+                    </Link>
+                  </div>
+                </div>
               </div>
-
-              <div className="fhl-card-body">
-                <h3 className="fhl-card-title">{fh.name}</h3>
-                <p className="fhl-card-desc">{fh.description?.substring(0, 110)}…</p>
-
-                <div className="fhl-card-meta">
-                  <span>🛏️ {fh.bedrooms || 3} Beds</span>
-                  <span>🚿 {fh.bathrooms || 2} Baths</span>
-                  <span>👥 {fh.maxGuests || 4} Guests</span>
-                </div>
-
-                <div className="fhl-card-footer">
-                  <Link to={`/farmhouses/${fh.id}`} className="fhl-view-btn">
-                    View Details →
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="fhl-empty">
           <span>🏚️</span>
-          <h3>No estates matched your search</h3>
-          <p>Try a different location, name or price range.</p>
-          <button onClick={handleClearFilters} className="fhl-btn-search">Reset Filters</button>
+          <h3>No {activeType !== 'ALL' && TYPE_CONFIG[activeType] ? TYPE_CONFIG[activeType].label : ''} estates matched your search</h3>
+          <p>Try switching categories or clearing search filters.</p>
+          <button type="button" onClick={handleClearFilters} className="fhl-btn-search">View All Estates</button>
         </div>
       )}
 

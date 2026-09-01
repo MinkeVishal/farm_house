@@ -1026,7 +1026,7 @@ function AdminDashboard() {
             <div className="adm-form-group"><label>Farmhouse Type</label><select value={discountForm.farmhouseType} onChange={e => setDiscountForm({ ...discountForm, farmhouseType: e.target.value })}><option value="ALL">All Farmhouses</option><option value="ZEN_RETREAT">Zen Retreat</option><option value="POOL_PARTY">Pool Party</option><option value="ADVENTURE_WOODS">Adventure Woods</option><option value="HERITAGE_PALACE">Heritage Palace</option></select></div>
           </div>
           <div className="adm-form-row">
-            <div className="adm-form-group"><label>Discount % <span className="req">*</span></label><input required type="number" min="0.01" max="99.99" step="0.01" value={discountForm.discountPercent} onChange={e => setDiscountForm({ ...discountForm, discountPercent: e.target.value })} /></div>
+            <div className="adm-form-group"><label>Discount % <span className="req">*</span> (Set 0 for No Discount)</label><input required type="number" min="0" max="99.99" step="0.1" value={discountForm.discountPercent} onChange={e => setDiscountForm({ ...discountForm, discountPercent: e.target.value })} /></div>
             <div className="adm-form-group"><label>Status</label><select value={String(discountForm.isActive)} onChange={e => setDiscountForm({ ...discountForm, isActive: e.target.value === 'true' })}><option value="true">Active</option><option value="false">Inactive</option></select></div>
           </div>
           <div className="adm-form-row">
