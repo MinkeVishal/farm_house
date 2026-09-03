@@ -42,6 +42,14 @@ const TYPE_META = {
   },
 };
 
+const formatDiscountDate = (date) => date
+  ? new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  : null;
+
 export default function DiscountsSection() {
   const [discounts, setDiscounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -195,10 +203,10 @@ export default function DiscountsSection() {
 
   // Build cards for all farmhouse categories
   const CATEGORIES = [
-    { type: 'POOL_PARTY', defaultPercent: 25 },
-    { type: 'ZEN_RETREAT', defaultPercent: 20 },
-    { type: 'ADVENTURE_WOODS', defaultPercent: 15 },
-    { type: 'HERITAGE_PALACE', defaultPercent: 30 },
+    { type: 'POOL_PARTY', defaultPercent: 25, defaultValidFrom: null, defaultValidTo: null },
+    { type: 'ZEN_RETREAT', defaultPercent: 20, defaultValidFrom: null, defaultValidTo: null },
+    { type: 'ADVENTURE_WOODS', defaultPercent: 15, defaultValidFrom: '2026-09-06', defaultValidTo: null },
+    { type: 'HERITAGE_PALACE', defaultPercent: 30, defaultValidFrom: null, defaultValidTo: null },
   ];
 
   // Combine categories with any Owner/Admin custom discounts
@@ -221,6 +229,8 @@ export default function DiscountsSection() {
       meta,
       discountPercent,
       specialOffer: activeDiscount ? activeDiscount.specialOffer : null,
+      validFrom: activeDiscount ? activeDiscount.validFrom : cat.defaultValidFrom,
+      validTo: activeDiscount ? activeDiscount.validTo : cat.defaultValidTo,
       farmhouseName: activeDiscount ? activeDiscount.farmhouseName : null,
       farmhouseId: activeDiscount ? activeDiscount.farmhouseId : null,
       discountId: activeDiscount ? activeDiscount.id : null,
@@ -328,6 +338,12 @@ export default function DiscountsSection() {
               {card.farmhouseName && (
                 <div className="ds-specific-farmhouse">
                   🏡 Applies to: <strong>{card.farmhouseName}</strong>
+                </div>
+              )}
+
+              {(card.validFrom || card.validTo) && (
+                <div className="ds-validity-tag">
+                  📅 Valid: {formatDiscountDate(card.validFrom) || 'Now'} - {formatDiscountDate(card.validTo) || 'Ongoing'}
                 </div>
               )}
 
