@@ -82,6 +82,7 @@ function Home({ user }) {
   const [searchLoc, setSearchLoc] = useState('');
   const [searchGuests, setSearchGuests] = useState('');
   const [searchPrice, setSearchPrice] = useState('');
+  const [offersCount, setOffersCount] = useState(0);
 
   // Stats
   const [stats, setStats] = useState({ houses: 0, guests: 0, rating: 0, cities: 0 });
@@ -271,9 +272,11 @@ function Home({ user }) {
             <Link to="/farmhouses" className="btn-lux-primary">
               Browse All Estates →
             </Link>
-            <a href="#discounts" className="btn-lux-outline">
-              🔥 Special Discounts
-            </a>
+            {(offersCount > 0 || user?.role === 'OWNER' || user?.role === 'ADMIN' || user?.role === 'SUPERADMIN') && (
+              <a href="#discounts" className="btn-lux-outline">
+                🔥 Special Discounts
+              </a>
+            )}
             {!user && (
               <Link to="/register" className="btn-lux-outline">
                 Create Free Account
@@ -408,7 +411,7 @@ function Home({ user }) {
       </section>
 
       {/* ═══════════ DISCOUNTS & SPECIAL OFFERS ═══════════ */}
-      <DiscountsSection />
+      <DiscountsSection onOffersCount={setOffersCount} />
 
       {/* ═══════════ BUDGET ESTIMATOR ═══════════ */}
       <section className="budget-section">

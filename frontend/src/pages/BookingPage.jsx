@@ -63,12 +63,21 @@ function BookingPage({ user }) {
   const [startDate, setStartDate] = useState(prefilled.prefilledStartDate || '');
   const [endDate, setEndDate]     = useState(prefilled.prefilledEndDate   || '');
   const [timeSlot, setTimeSlot]   = useState(toUiBookingType(prefilled.prefilledTimeSlot) || '');
-  const [guests, setGuests]       = useState(prefilled.prefilledGuests    || 1);
+  const [guestGroupType, setGuestGroupType] = useState(prefilled.prefilledGuestGroupType || 'Couple');
+  const [couplesCount, setCouplesCount]     = useState(1);
+  const [guests, setGuests]                 = useState(prefilled.prefilledGuests    || 2);
   const [specialRequirements, setSpecialRequirements] = useState('');
   const [addons, setAddons] = useState(
     prefilled.prefilledAddons || { chef: false, bonfire: false, dj: false, adventure: false, decor: false, spa: false }
   );
   const [paymentMethod, setPaymentMethod] = useState('CARD');
+
+  const maxGuests = Math.max(1, Number(farmhouse?.maxGuests) || 10);
+  const maxCouples = Math.max(1, Math.floor(maxGuests / 2));
+  const guestPresets = [4, 8, 15, 25, 50, 100, 150, maxGuests]
+    .filter((count, index, counts) => count <= maxGuests && counts.indexOf(count) === index);
+  const couplePresets = [1, 2, 3, 4, 5, 8, 10, maxCouples]
+    .filter((count, index, counts) => count <= maxCouples && counts.indexOf(count) === index);
 
   useEffect(() => {
     fetchFarmhouseDetails();
@@ -157,7 +166,7 @@ function BookingPage({ user }) {
   const grandTotal = subtotal + gst + serviceFee;
 
   // ── Step Validation ───────────────────────────
-  const step0Valid = startDate && endDate && nights > 0 && guests >= 1;
+  const step0Valid = startDate && endDate && nights > 0 && guests >= 1 && guests <= maxGuests;
 
   const handleNext = () => {
     if (currentStep === 0 && (!step0Valid || !timeSlot)) {
@@ -193,13 +202,26 @@ function BookingPage({ user }) {
         .filter(Boolean)
         .join(', ');
 
+      let stayTypeDetail = guestGroupType;
+      if (guestGroupType === 'Couple') {
+        stayTypeDetail = `${couplesCount} Couple${couplesCount > 1 ? 's' : ''} (${guests} Guests)`;
+      } else if (guestGroupType === 'Friends') {
+        stayTypeDetail = `Friends (${guests} Members)`;
+      } else if (guestGroupType === 'Family') {
+        stayTypeDetail = `Family (${guests} Members)`;
+      }
+
       const bookingReq = {
         farmHouseId: parseInt(farmhouseId),
         startDate,
         endDate,
         timeSlot,
         numberOfGuests: parseInt(guests),
-        specialRequirements: [specialRequirements, addonsText ? `Add-ons: ${addonsText}` : ''].filter(Boolean).join(' | '),
+        specialRequirements: [
+          stayTypeDetail ? `Stay Type: ${stayTypeDetail}` : '',
+          specialRequirements,
+          addonsText ? `Add-ons: ${addonsText}` : ''
+        ].filter(Boolean).join(' | '),
       };
 
       const bookingRes = await bookingAPI.createBooking(bookingReq, user.id);
@@ -259,7 +281,7 @@ function BookingPage({ user }) {
             <div className="bk-succ-row"><span>📅 Check-out</span><strong>{fmt(endDate)}<small>{getBookingHours(timeSlot).checkOut}</small></strong></div>
             <div className="bk-succ-row"><span>🕒 Booking type</span><strong>{BOOKING_TYPES.find(type => type.key === normalizeBookingType(timeSlot))?.label}</strong></div>
             <div className="bk-succ-row"><span>🌙 Nights</span><strong>{nights}</strong></div>
-            <div className="bk-succ-row"><span>👥 Guests</span><strong>{guests}</strong></div>
+            <div className="bk-succ-row"><span>👥 Guests</span><strong>{guests} {guestGroupType ? `(${guestGroupType})` : ''}</strong></div>
             <div className="bk-succ-divider"/>
             <div className="bk-succ-row bk-succ-total"><span>💰 Total Paid</span><strong>₹{grandTotal.toLocaleString()}</strong></div>
           </div>
@@ -427,41 +449,389 @@ function BookingPage({ user }) {
                 </div>
               )}
 
-              {/* Guest Stepper */}
-              <div className="bk-field bk-guest-field">
-                <label>Number of Guests <span className="bk-label-sub">(Max {farmhouse.maxGuests})</span></label>
-                <div className="bk-guest-stepper">
-                  <button
-                    type="button"
-                    className="bk-step-btn"
-                    onClick={() => setGuests(g => Math.max(1, g - 1))}
-                    disabled={guests <= 1}
-                  >−</button>
-                  <div className="bk-guest-display">
-                    <span className="bk-guest-num">{guests}</span>
-                    <span className="bk-guest-lbl">Guest{guests > 1 ? 's' : ''}</span>
+              {/* Formal Farmhouse Stay Type & Guest Allocation Section */}
+              <div className="bk-field bk-guest-field bk-formal-estate-card">
+                <div className="bk-formal-section-header">
+                  <div className="bk-formal-title-group">
+                    <span className="bk-formal-badge">ESTATE ACCOMMODATIONS</span>
+                    <h3 className="bk-formal-title">Select Stay Category & Guest Manifest</h3>
+                    <p className="bk-formal-subtitle">Choose your preferred estate accommodation profile and configure room allocations</p>
                   </div>
-                  <button
-                    type="button"
-                    className="bk-step-btn"
-                    onClick={() => setGuests(g => Math.min(farmhouse.maxGuests, g + 1))}
-                    disabled={guests >= farmhouse.maxGuests}
-                  >+</button>
                 </div>
-                {/* Guest visual dots */}
-                <div className="bk-guest-dots">
-                  {Array.from({ length: farmhouse.maxGuests }, (_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`bk-guest-dot ${i < guests ? 'filled' : ''}`}
-                      onClick={() => setGuests(i + 1)}
-                      title={`${i + 1} guest${i > 0 ? 's' : ''}`}
+
+                <div className="bk-formal-group-options">
+                  {[
+                    { 
+                      key: 'Couple', 
+                      label: 'Couples & Duo Retreat', 
+                      icon: '🗝️', 
+                      tag: 'Private Suites',
+                      desc: 'Dedicated En-Suite Master Bedrooms • 2 Guests per Suite' 
+                    },
+                    { 
+                      key: 'Friends', 
+                      label: 'Private Group & Friends', 
+                      icon: '🌿', 
+                      tag: 'Estate Buyout',
+                      desc: `Up to ${maxGuests} Guests • Social Gathering & Lawn Access` 
+                    },
+                    { 
+                      key: 'Family', 
+                      label: 'Family & Heritage Stay', 
+                      icon: '🏛️', 
+                      tag: 'Multi-Gen Villa',
+                      desc: `Up to ${maxGuests} Members • Children & Elderly Friendly` 
+                    },
+                  ].map((type) => (
+                    <label
+                      key={type.key}
+                      className={`bk-formal-pill ${guestGroupType === type.key ? 'active' : ''}`}
+                      onClick={() => {
+                        setGuestGroupType(type.key);
+                        if (type.key === 'Couple') {
+                          setCouplesCount(1);
+                          setGuests(2);
+                        } else {
+                          setGuests(Math.min(Math.max(guests, 1), maxGuests));
+                        }
+                      }}
                     >
-                      {i < guests ? '👤' : '○'}
-                    </button>
+                      <input
+                        type="radio"
+                        name="guestGroupType"
+                        value={type.key}
+                        checked={guestGroupType === type.key}
+                        onChange={() => {
+                          setGuestGroupType(type.key);
+                          if (type.key === 'Couple') {
+                            setCouplesCount(1);
+                            setGuests(2);
+                          } else {
+                            setGuests(Math.min(Math.max(guests, 1), maxGuests));
+                          }
+                        }}
+                        className="bk-group-type-radio"
+                      />
+                      <div className="bk-formal-pill-top">
+                        <span className="bk-formal-pill-icon">{type.icon}</span>
+                        <span className="bk-formal-pill-tag">{type.tag}</span>
+                      </div>
+                      <div className="bk-formal-pill-body">
+                        <strong className="bk-formal-pill-label">{type.label}</strong>
+                        <span className="bk-formal-pill-desc">{type.desc}</span>
+                      </div>
+                      <div className="bk-formal-pill-check">
+                        {guestGroupType === type.key ? '✓ Selected' : 'Select'}
+                      </div>
+                    </label>
                   ))}
                 </div>
+
+                {/* FORMAL CONFIGURATION: COUPLES RETREAT */}
+                {guestGroupType === 'Couple' && (
+                  <div className="bk-formal-config-box">
+                    <div className="bk-formal-config-head">
+                      <div>
+                        <span className="bk-formal-subhead-badge">SUITE ARCHITECTURE</span>
+                        <h4 className="bk-formal-subhead-title">Couples & Master Suite Allocation</h4>
+                        <p className="bk-formal-subhead-note">Each couple is allocated 1 Private En-Suite Bedroom (2 Adult Guests per Suite)</p>
+                      </div>
+                      <div className="bk-formal-occupancy-badge">
+                        <span className="bk-fob-number">{couplesCount}</span>
+                        <span className="bk-fob-text">
+                          {couplesCount === 1 ? 'Suite / Couple' : 'Suites / Couples'}
+                          <small>({guests} Guests Total)</small>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stepper + Direct Entry */}
+                    <div className="bk-formal-stepper-container">
+                      <div className="bk-formal-stepper-left">
+                        <span className="bk-formal-stepper-lbl">Number of Couples:</span>
+                        <div className="bk-formal-stepper-controls">
+                          <button
+                            type="button"
+                            className="bk-formal-step-btn"
+                            disabled={couplesCount <= 1}
+                            onClick={() => {
+                              const val = Math.max(1, couplesCount - 1);
+                              setCouplesCount(val);
+                              setGuests(val * 2);
+                            }}
+                            title="Decrease couples"
+                          >−</button>
+
+                          <div className="bk-formal-stepper-input-wrap">
+                            <input
+                              type="number"
+                              min="1"
+                              max={maxCouples}
+                              value={couplesCount}
+                              onChange={(e) => {
+                                const val = Math.min(maxCouples, Math.max(1, parseInt(e.target.value, 10) || 1));
+                                setCouplesCount(val);
+                                setGuests(val * 2);
+                              }}
+                              className="bk-formal-number-input"
+                            />
+                            <span className="bk-formal-unit-suffix">Couple{couplesCount > 1 ? 's' : ''}</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="bk-formal-step-btn"
+                            disabled={couplesCount >= maxCouples}
+                            onClick={() => {
+                              const val = Math.min(maxCouples, couplesCount + 1);
+                              setCouplesCount(val);
+                              setGuests(val * 2);
+                            }}
+                            title="Increase couples"
+                          >+</button>
+                        </div>
+                      </div>
+
+                      <div className="bk-formal-suite-breakdown-card">
+                        <div className="bk-fsb-row">
+                          <span className="bk-fsb-label">Allocated Bedrooms:</span>
+                          <strong className="bk-fsb-val">{couplesCount} King En-Suite{couplesCount > 1 ? 's' : ''}</strong>
+                        </div>
+                        <div className="bk-fsb-row">
+                          <span className="bk-fsb-label">Total Registered Guests:</span>
+                          <strong className="bk-fsb-val">{guests} Adults (2 per room)</strong>
+                        </div>
+                        <div className="bk-fsb-row">
+                          <span className="bk-fsb-label">Estate Privacy Status:</span>
+                          <strong className="bk-fsb-val text-success">100% Exclusive Buyout</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Formal Quick Selection Tiers */}
+                    <div className="bk-formal-tiers-block">
+                      <span className="bk-formal-tiers-lbl">Quick Select Standard Allocations:</span>
+                      <div className="bk-formal-tiers-list">
+                        {couplePresets.map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            className={`bk-formal-tier-btn ${couplesCount === num ? 'selected' : ''}`}
+                            onClick={() => {
+                              setCouplesCount(num);
+                              setGuests(num * 2);
+                            }}
+                          >
+                            <span className="bk-ft-num">{num} {num === 1 ? 'Couple' : 'Couples'}</span>
+                            <span className="bk-ft-sub">{num} Suite{num > 1 ? 's' : ''} • {num * 2} Guests</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Estate Privileges Grid */}
+                    <div className="bk-formal-privileges-grid">
+                      <div className="bk-fp-item">
+                        <span className="bk-fp-icon">🥂</span>
+                        <div>
+                          <strong>Private Check-in & Host</strong>
+                          <span>Direct concierge greeting on arrival</span>
+                        </div>
+                      </div>
+                      <div className="bk-fp-item">
+                        <span className="bk-fp-icon">🏊</span>
+                        <div>
+                          <strong>Exclusive Pool & Lawn</strong>
+                          <span>No shared access with outside guests</span>
+                        </div>
+                      </div>
+                      <div className="bk-fp-item">
+                        <span className="bk-fp-icon">☕</span>
+                        <div>
+                          <strong>Farmhouse Breakfast</strong>
+                          <span>Fresh estate kitchen morning menu</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Official Reservation Manifest Summary */}
+                    <div className="bk-formal-manifest-box">
+                      <div className="bk-fmb-header">
+                        <span className="bk-fmb-tag">OFFICIAL RESERVATION MANIFEST</span>
+                        <span className="bk-fmb-id">REF: EST-CPL-{couplesCount}X{guests}</span>
+                      </div>
+                      <div className="bk-fmb-grid">
+                        <div className="bk-fmb-cell">
+                          <span className="bk-fmb-lbl">Stay Profile</span>
+                          <strong>Couples Luxury Sanctuary</strong>
+                        </div>
+                        <div className="bk-fmb-cell">
+                          <span className="bk-fmb-lbl">Total Couples</span>
+                          <strong>{couplesCount} {couplesCount === 1 ? 'Couple' : 'Couples'}</strong>
+                        </div>
+                        <div className="bk-fmb-cell">
+                          <span className="bk-fmb-lbl">Total Guest Count</span>
+                          <strong>{guests} Registered Adults</strong>
+                        </div>
+                        <div className="bk-fmb-cell">
+                          <span className="bk-fmb-lbl">Accommodations</span>
+                          <strong>{couplesCount} Private Master Suite{couplesCount > 1 ? 's' : ''}</strong>
+                        </div>
+                      </div>
+                      <div className="bk-fmb-footer">
+                        <span>🛡️ Verified Estate Standard: Guaranteed private premises, sanitized luxury linens, and dedicated caretaker.</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* FORMAL CONFIGURATION: FRIENDS & GROUP STAY */}
+                {guestGroupType === 'Friends' && (
+                  <div className="bk-formal-config-box">
+                    <div className="bk-formal-config-head">
+                      <div>
+                        <span className="bk-formal-subhead-badge">GROUP OCCUPANCY</span>
+                        <h4 className="bk-formal-subhead-title">Private Group & Friends Allocation</h4>
+                        <p className="bk-formal-subhead-note">Full farmhouse grounds reservation for get-togethers and private events</p>
+                      </div>
+                      <div className="bk-formal-occupancy-badge">
+                        <span className="bk-fob-number">{guests}</span>
+                        <span className="bk-fob-text">
+                          Guests Total
+                          <small>Estate Capacity: {maxGuests}</small>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bk-formal-stepper-container">
+                      <div className="bk-formal-stepper-left">
+                        <span className="bk-formal-stepper-lbl">Total Group Members:</span>
+                        <div className="bk-formal-stepper-controls">
+                          <button
+                            type="button"
+                            className="bk-formal-step-btn"
+                            disabled={guests <= 1}
+                            onClick={() => setGuests(Math.max(1, guests - 1))}
+                          >−</button>
+                          <div className="bk-formal-stepper-input-wrap">
+                            <input
+                              type="number"
+                              min="1"
+                              max={maxGuests}
+                              value={guests}
+                              onChange={(e) => {
+                                const val = Math.min(maxGuests, Math.max(1, parseInt(e.target.value, 10) || 1));
+                                setGuests(val);
+                              }}
+                              className="bk-formal-number-input"
+                            />
+                            <span className="bk-formal-unit-suffix">Guests</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="bk-formal-step-btn"
+                            disabled={guests >= maxGuests}
+                            onClick={() => setGuests(Math.min(maxGuests, guests + 1))}
+                          >+</button>
+                        </div>
+                      </div>
+
+                      <div className="bk-formal-tiers-list">
+                        {guestPresets.map((count) => (
+                          <button
+                            key={count}
+                            type="button"
+                            className={`bk-formal-tier-btn ${guests === count ? 'selected' : ''}`}
+                            onClick={() => setGuests(count)}
+                          >
+                            <span className="bk-ft-num">{count} Guests</span>
+                            <span className="bk-ft-sub">{count >= 50 ? 'Event / Large Gathering' : 'Standard Group'}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {guests >= 50 && (
+                      <div className="bk-formal-event-notice">
+                        🏛️ <strong>Grand Estate Event Booking:</strong> {guests} guests registered. Access to central party lawn, ambient outdoor lighting, and event housekeeping protocol.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* FORMAL CONFIGURATION: FAMILY HERITAGE STAY */}
+                {guestGroupType === 'Family' && (
+                  <div className="bk-formal-config-box">
+                    <div className="bk-formal-config-head">
+                      <div>
+                        <span className="bk-formal-subhead-badge">FAMILY RESIDENCE</span>
+                        <h4 className="bk-formal-subhead-title">Family & Multi-Generation Accommodation</h4>
+                        <p className="bk-formal-subhead-note">Peaceful family stay with full private kitchen, spacious lawn, and child-safe amenities</p>
+                      </div>
+                      <div className="bk-formal-occupancy-badge">
+                        <span className="bk-fob-number">{guests}</span>
+                        <span className="bk-fob-text">
+                          Family Members
+                          <small>Estate Capacity: {maxGuests}</small>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bk-formal-stepper-container">
+                      <div className="bk-formal-stepper-left">
+                        <span className="bk-formal-stepper-lbl">Total Family Members:</span>
+                        <div className="bk-formal-stepper-controls">
+                          <button
+                            type="button"
+                            className="bk-formal-step-btn"
+                            disabled={guests <= 1}
+                            onClick={() => setGuests(Math.max(1, guests - 1))}
+                          >−</button>
+                          <div className="bk-formal-stepper-input-wrap">
+                            <input
+                              type="number"
+                              min="1"
+                              max={maxGuests}
+                              value={guests}
+                              onChange={(e) => {
+                                const val = Math.min(maxGuests, Math.max(1, parseInt(e.target.value, 10) || 1));
+                                setGuests(val);
+                              }}
+                              className="bk-formal-number-input"
+                            />
+                            <span className="bk-formal-unit-suffix">Members</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="bk-formal-step-btn"
+                            disabled={guests >= maxGuests}
+                            onClick={() => setGuests(Math.min(maxGuests, guests + 1))}
+                          >+</button>
+                        </div>
+                      </div>
+
+                      <div className="bk-formal-tiers-list">
+                        {guestPresets.map((count) => (
+                          <button
+                            key={count}
+                            type="button"
+                            className={`bk-formal-tier-btn ${guests === count ? 'selected' : ''}`}
+                            onClick={() => setGuests(count)}
+                          >
+                            <span className="bk-ft-num">{count} Members</span>
+                            <span className="bk-ft-sub">{count >= 20 ? 'Family Reunion' : 'Family Vacation'}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {guests >= 50 && (
+                      <div className="bk-formal-event-notice">
+                        🏰 <strong>Grand Family Reunion:</strong> {guests} family members selected. Ideal for milestone anniversaries, birthday celebrations, and multi-family weekend stays.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Special Requirements */}
@@ -609,7 +979,7 @@ function BookingPage({ user }) {
               </div>
               <div className="bk-rcpt-row">
                 <span>👥 Guests</span>
-                <strong>{guests}</strong>
+                <strong>{guests} {guestGroupType ? `(${guestGroupType})` : ''}</strong>
               </div>
             </div>
 

@@ -250,7 +250,7 @@ function FarmHouseList({ user }) {
           </h1>
           <p>
             {activeType !== 'ALL' && TYPE_CONFIG[activeType]
-              ? `Showing curated ${TYPE_CONFIG[activeType].label} farmhouses. Book now with exclusive category discount!`
+              ? `Showing curated ${TYPE_CONFIG[activeType].label} farmhouses. Hand-picked luxury stays with premium amenities.`
               : 'Hand-picked luxury properties across India — private pools, bonfires, and breathtaking views await'}
           </p>
         </div>

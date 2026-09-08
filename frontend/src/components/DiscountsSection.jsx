@@ -50,7 +50,7 @@ const formatDiscountDate = (date) => date
   })
   : null;
 
-export default function DiscountsSection() {
+export default function DiscountsSection({ onOffersCount }) {
   const [discounts, setDiscounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -153,7 +153,11 @@ export default function DiscountsSection() {
     e.preventDefault();
     if (!user) return;
     setFormSaving(true);
-    setFormMsg({ type: '', text: '' });
+    if (discountForm.validFrom && discountForm.validTo && discountForm.validTo < discountForm.validFrom) {
+      setFormMsg({ type: 'error', text: 'Valid To date cannot be earlier than Valid From date.' });
+      setFormSaving(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -201,44 +205,43 @@ export default function DiscountsSection() {
     }
   };
 
-  // Build cards for all farmhouse categories
-  const CATEGORIES = [
-    { type: 'POOL_PARTY', defaultPercent: 25, defaultValidFrom: null, defaultValidTo: null },
-    { type: 'ZEN_RETREAT', defaultPercent: 20, defaultValidFrom: null, defaultValidTo: null },
-    { type: 'ADVENTURE_WOODS', defaultPercent: 15, defaultValidFrom: '2026-09-06', defaultValidTo: null },
-    { type: 'HERITAGE_PALACE', defaultPercent: 30, defaultValidFrom: null, defaultValidTo: null },
-  ];
+  // Filter for genuine active offers (positive discount percent)
+  const activeOffers = discounts.filter(
+    (d) => d && d.isActive !== false && Number(d.discountPercent) > 0
+  );
 
-  // Combine categories with any Owner/Admin custom discounts
-  const displayCards = CATEGORIES.map((cat) => {
-    // Find active discount set by owner/admin for this type
-    const customDiscount = discounts.find(
-      (d) => d.farmhouseType === cat.type && d.isActive !== false
-    );
-    const globalDiscount = discounts.find(
-      (d) => d.farmhouseType === 'ALL' && d.isActive !== false
-    );
+  useEffect(() => {
+    if (typeof onOffersCount === 'function') {
+      onOffersCount(activeOffers.length);
+    }
+  }, [activeOffers.length, onOffersCount]);
 
-    const activeDiscount = customDiscount || globalDiscount;
-    const meta = TYPE_META[cat.type] || TYPE_META.ALL;
-
-    const discountPercent = activeDiscount ? activeDiscount.discountPercent : cat.defaultPercent;
+  // ONLY build cards for farmhouse types that have an active offer
+  const displayCards = activeOffers.map((activeDiscount) => {
+    const typeKey = activeDiscount.farmhouseType || 'ALL';
+    const meta = TYPE_META[typeKey] || TYPE_META.ALL;
+    const discountPercent = Number(activeDiscount.discountPercent);
 
     return {
-      typeKey: cat.type,
+      typeKey,
       meta,
       discountPercent,
-      specialOffer: activeDiscount ? activeDiscount.specialOffer : null,
-      validFrom: activeDiscount ? activeDiscount.validFrom : cat.defaultValidFrom,
-      validTo: activeDiscount ? activeDiscount.validTo : cat.defaultValidTo,
-      farmhouseName: activeDiscount ? activeDiscount.farmhouseName : null,
-      farmhouseId: activeDiscount ? activeDiscount.farmhouseId : null,
-      discountId: activeDiscount ? activeDiscount.id : null,
-      createdById: activeDiscount ? activeDiscount.createdById : null,
-      isCustom: !!activeDiscount,
+      specialOffer: activeDiscount.specialOffer || null,
+      validFrom: activeDiscount.validFrom || null,
+      validTo: activeDiscount.validTo || null,
+      farmhouseName: activeDiscount.farmhouseName || null,
+      farmhouseId: activeDiscount.farmhouseId || null,
+      discountId: activeDiscount.id,
+      createdById: activeDiscount.createdById,
+      isCustom: true,
       rawDiscount: activeDiscount,
     };
   });
+
+  // If not loading, no active offers exist, and user is not an admin/owner, hide the section entirely
+  if (!loading && displayCards.length === 0 && !isOwnerOrAdmin) {
+    return null;
+  }
 
   return (
     <section className="discounts-section" id="discounts">
@@ -249,7 +252,17 @@ export default function DiscountsSection() {
       {/* Header Intro */}
       <div className="section-intro">
         <div className="ds-header-top">
-          <span className="section-chip ds-chip">🔥 DISCOUNTS BY FARMHOUSE TYPE</span>
+          <a
+            href="#discounts"
+            className="section-chip ds-chip"
+            style={{ cursor: 'pointer', textDecoration: 'none' }}
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('discounts')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            🔥 DISCOUNTS BY FARMHOUSE TYPE
+          </a>
           {isOwnerOrAdmin && (
             <div className="ds-admin-control-bar">
               <button
@@ -270,58 +283,62 @@ export default function DiscountsSection() {
           )}
         </div>
         <h2>Special Farmhouse Type Discounts</h2>
-        <p>Explore percentage discounts decided for each type of farmhouse stay.</p>
+        <p>Explore exclusive percentage discounts currently active for farmhouse stays.</p>
       </div>
 
-      {/* ── SIMPLE, FOCUSED DISCOUNT CARDS (FARMHOUSE TYPE + % DISCOUNT) ── */}
-      <div className="ds-grid">
-        {displayCards.map((card) => {
-          const hasDiscount = card.discountPercent > 0;
-
-          return (
+      {/* ── SHOW ACTIVE OFFERS OR ADMIN EMPTY STATE ── */}
+      {displayCards.length === 0 ? (
+        <div className="ds-no-deals">
+          <span>🏷️</span>
+          <h3>No Active Discount Offers</h3>
+          <p>
+            There are currently no active offers. When you publish a discount for a farmhouse type,
+            only that type of discount will be displayed to guests.
+          </p>
+          {isOwnerOrAdmin && (
+            <button
+              type="button"
+              className="ds-create-discount-btn"
+              style={{ margin: '0 auto', display: 'inline-flex' }}
+              onClick={() => openCreateModal('POOL_PARTY')}
+            >
+              ➕ Set First % Discount
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="ds-grid">
+          {displayCards.map((card) => (
             <div
-              key={card.typeKey}
-              className={`ds-type-card ${card.meta.themeClass || ''} ${!hasDiscount ? 'no-discount-card' : ''}`}
+              key={card.discountId || card.typeKey}
+              className={`ds-type-card ${card.meta.themeClass || ''}`}
               style={{ background: card.meta.gradient }}
             >
               {/* Percentage Badge */}
-              <div className={`ds-badge ${!hasDiscount ? 'ds-badge-zero' : ''}`}>
+              <div className="ds-badge">
                 <span className="ds-badge-percent">{card.discountPercent}%</span>
-                <span className="ds-badge-off">{hasDiscount ? 'OFF' : 'NO DISCOUNT'}</span>
+                <span className="ds-badge-off">OFF</span>
               </div>
 
               {/* Owner/Admin Quick Edit / Set Buttons */}
               {isOwnerOrAdmin && (
                 <div className="ds-card-admin-actions">
-                  {card.isCustom ? (
-                    <>
-                      <button
-                        type="button"
-                        className="ds-mini-btn edit"
-                        title="Edit % Discount"
-                        onClick={() => openEditModal(card.rawDiscount)}
-                      >
-                        ✏️ Edit %
-                      </button>
-                      <button
-                        type="button"
-                        className="ds-mini-btn delete"
-                        title="Reset custom discount"
-                        onClick={() => handleDeleteDiscount(card.discountId)}
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      className="ds-mini-btn edit"
-                      title="Set custom % discount"
-                      onClick={() => openCreateModal(card.typeKey)}
-                    >
-                      ✏️ Set %
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="ds-mini-btn edit"
+                    title="Edit % Discount"
+                    onClick={() => openEditModal(card.rawDiscount)}
+                  >
+                    ✏️ Edit %
+                  </button>
+                  <button
+                    type="button"
+                    className="ds-mini-btn delete"
+                    title="Delete discount"
+                    onClick={() => handleDeleteDiscount(card.discountId)}
+                  >
+                    🗑️
+                  </button>
                 </div>
               )}
 
@@ -348,31 +365,31 @@ export default function DiscountsSection() {
               )}
 
               {/* Special Perk if set */}
-              {card.specialOffer ? (
+              {card.specialOffer && (
                 <div className="ds-offer-tag">
                   🎁 {card.specialOffer}
                 </div>
-              ) : !hasDiscount ? (
-                <div className="ds-offer-tag zero-tag">
-                  🏷️ Standard Booking Rate (No Active Discount)
-                </div>
-              ) : null}
+              )}
 
               {/* Direct Action Button */}
               <div className="ds-type-card-footer">
                 <Link
-                  to={card.farmhouseId ? `/farmhouses/${card.farmhouseId}` : `/farmhouses?type=${card.typeKey}`}
+                  to={
+                    card.farmhouseId
+                      ? `/farmhouses/${card.farmhouseId}`
+                      : card.typeKey === 'ALL'
+                      ? '/farmhouses'
+                      : `/farmhouses?type=${card.typeKey}`
+                  }
                   className="ds-type-book-btn"
                 >
-                  {hasDiscount
-                    ? `Explore ${card.meta.label} (${card.discountPercent}% OFF) →`
-                    : `Explore ${card.meta.label} (Standard Rate) →`}
+                  Explore {card.meta.label} ({card.discountPercent}% OFF) →
                 </Link>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* ── OWNER / ADMIN QUICK DISCOUNT MODAL ── */}
       {showModal && (
@@ -445,6 +462,27 @@ export default function DiscountsSection() {
                       </button>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              <div className="ds-form-row">
+                <div className="ds-form-field">
+                  <label>3. Valid From Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={discountForm.validFrom || ''}
+                    onChange={(e) => setDiscountForm({ ...discountForm, validFrom: e.target.value })}
+                  />
+                </div>
+
+                <div className="ds-form-field">
+                  <label>4. Valid To Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={discountForm.validTo || ''}
+                    min={discountForm.validFrom || undefined}
+                    onChange={(e) => setDiscountForm({ ...discountForm, validTo: e.target.value })}
+                  />
                 </div>
               </div>
 
